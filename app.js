@@ -1478,14 +1478,24 @@ async function renderClientSelectCards() {
     (!r.answers || r.answers.length === 0)
   );
 
+  // 현재 내담자가 이미 작성을 완료한 기록 확인
+  const clientCompletedRecords = records.filter(r => 
+    r.clientId === currentClient.id && 
+    r.answers && r.answers.length > 0
+  );
+
   DOM.counselingGrid.innerHTML = "";
   allActiveTypes.forEach(opt => {
     // 관리자가 사전에 배정해둔 기록이 있는지 매칭
     const matchedRecord = clientPendingRecords.find(r => r.counselingTypeId === opt.id);
     const isAssigned = !!matchedRecord;
 
+    // 이미 작성 완료된 기록이 있는지 확인
+    const completedRecord = clientCompletedRecords.find(r => r.counselingTypeId === opt.id);
+    const isCompleted = !!completedRecord;
+
     const card = document.createElement("div");
-    card.className = `group relative p-6 rounded-2xl bg-surface-container-lowest border border-outline-variant/30 
+    card.className = `group relative p-6 rounded-2xl bg-surface-container-lowest border ${isCompleted ? 'border-emerald-200/80 bg-emerald-50/20' : 'border-outline-variant/30'} 
       shadow-[0_8px_32px_rgba(112,128,144,0.04)] hover:shadow-[0_16px_48px_rgba(112,128,144,0.12)]
       cursor-pointer transition-all duration-300 flex flex-col gap-4 overflow-hidden`;
     card.dataset.id = opt.id;
@@ -1502,11 +1512,17 @@ async function renderClientSelectCards() {
       </div>
 
       <div class="flex items-center justify-between">
-        <div class="w-12 h-12 rounded-xl bg-secondary-container flex items-center justify-center icon-container transition-colors duration-300">
-          <span class="material-symbols-outlined text-[24px] text-on-secondary-container">${icon}</span>
+        <div class="w-12 h-12 rounded-xl ${isCompleted ? 'bg-emerald-100 text-emerald-700' : 'bg-secondary-container text-on-secondary-container'} flex items-center justify-center icon-container transition-colors duration-300">
+          <span class="material-symbols-outlined text-[24px]">${icon}</span>
         </div>
-        ${isAssigned ? `
-          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200 mr-8">
+        ${isCompleted ? `
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200 mr-8">
+            <span class="material-symbols-outlined text-[14px]">task_alt</span>
+            작성 완료한 상담지
+          </span>
+        ` : isAssigned ? `
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200 mr-8">
+            <span class="material-symbols-outlined text-[14px]">assignment_ind</span>
             관리자가 배정한 상담
           </span>
         ` : ''}
@@ -1794,7 +1810,9 @@ function startSuccessCountdown() {
     DOM.countdownTimerDisplay.textContent = leftSec;
     if (leftSec <= 0) {
       clearInterval(countdownTimer);
-      showView("client-login");
+      selectedCounselingType = null;
+      currentRecordId = null;
+      showView("client-select");
     }
   }, 1000);
 }
@@ -2635,10 +2653,9 @@ function registerEventListeners() {
 
   DOM.btnSuccessHome.addEventListener("click", () => {
     if (countdownTimer) clearInterval(countdownTimer);
-    currentClient = null;
     selectedCounselingType = null;
     currentRecordId = null;
-    showView("client-login");
+    showView("client-select");
   });
 
   // 관리자 이동 버튼 클릭 (버튼 존재 시에만 동작)

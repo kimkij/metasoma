@@ -1,0 +1,282 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&amp;family=Noto+Sans:wght@400;600&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={theme:{extend:{"colors":{"error-container":"#ffdad6","secondary-fixed":"#e1e1f5","on-background":"#0d1d2a","outline":"#74796c","on-secondary-fixed":"#191b29","tertiary":"#5e604d","secondary-container":"#e1e1f5","on-tertiary-container":"#353726","error":"#ba1a1a","secondary":"#5c5d6e","on-secondary-fixed-variant":"#444655","inverse-primary":"#aed18f","on-primary-fixed-variant":"#314e1b","on-tertiary":"#ffffff","on-primary":"#ffffff","on-secondary-container":"#626374","surface-tint":"#486730","on-error":"#ffffff","on-tertiary-fixed-variant":"#474836","on-tertiary-fixed":"#1b1d0e","on-error-container":"#93000a","primary-container":"#87a96b","surface-container-highest":"#d4e4f6","tertiary-container":"#9fa08a","primary":"#486730","primary-fixed":"#c9eea9","surface":"#f7f9ff","inverse-surface":"#223240","surface-container":"#e2efff","surface-container-low":"#ecf4ff","on-primary-fixed":"#0b2000","surface-dim":"#cbdcee","secondary-fixed-dim":"#c5c5d8","surface-bright":"#f7f9ff","on-surface":"#0d1d2a","on-secondary":"#ffffff","inverse-on-surface":"#e7f2ff","on-primary-container":"#213d0b","tertiary-fixed":"#e4e4cc","background":"#f7f9ff","primary-fixed-dim":"#aed18f","on-surface-variant":"#43483d","surface-variant":"#d4e4f6","surface-container-high":"#d9eafc","tertiary-fixed-dim":"#c8c8b0","surface-container-lowest":"#ffffff","outline-variant":"#c4c8ba"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"margin-mobile":"16px","xl":"64px","md":"24px","margin-desktop":"48px","gutter":"24px","xs":"4px","sm":"12px","base":"8px","lg":"40px"},"fontFamily":{"body-md":["Noto Sans"],"headline-lg":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"label-sm":["Noto Sans"],"body-lg":["Noto Sans"],"body-sm":["Noto Sans"],"label-md":["Noto Sans"],"display-lg":["Plus Jakarta Sans"]},"fontSize":{"body-md":["16px",{"lineHeight":"24px","fontWeight":"400"}],"headline-lg":["32px",{"lineHeight":"40px","letterSpacing":"-0.01em","fontWeight":"600"}],"headline-sm":["20px",{"lineHeight":"28px","fontWeight":"600"}],"headline-md":["24px",{"lineHeight":"32px","fontWeight":"600"}],"label-sm":["12px",{"lineHeight":"14px","letterSpacing":"0.05em","fontWeight":"600"}],"body-lg":["18px",{"lineHeight":"28px","fontWeight":"400"}],"body-sm":["14px",{"lineHeight":"20px","fontWeight":"400"}],"label-md":["14px",{"lineHeight":"16px","letterSpacing":"0.05em","fontWeight":"600"}],"display-lg":["40px",{"lineHeight":"48px","letterSpacing":"-0.02em","fontWeight":"700"}]}}}}</script></head><body class="bg-background font-body-md text-on-surface"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-low/60 backdrop-blur-xl z-50 flex flex-col pt-lg pb-lg shadow-[0_4px_24px_rgba(112,128,144,0.06)]"><div class="px-xl mb-lg flex items-center gap-base"><span class="material-symbols-outlined text-primary text-[32px]">spa</span><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight">Serenity CRM</span></div><nav class="flex-1 px-md space-y-xs" data-active-classes="bg-primary-container text-on-primary-container font-semibold"><a class="flex items-center px-md py-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high/50 hover:text-on-surface transition-all group" data-path="dashboard" href="#"><span class="material-symbols-outlined mr-md text-[22px] group-hover:text-primary">dashboard</span><span class="font-label-md text-label-md">Dashboard</span></a><a aria-current="page" class="flex items-center px-md py-sm rounded-xl transition-all group bg-primary-container text-on-primary-container font-semibold" data-path="client-list" href="#"><span class="material-symbols-outlined mr-md text-[22px] group-hover:text-primary">group</span><span class="font-label-md text-label-md">Client List</span></a><a class="flex items-center px-md py-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high/50 hover:text-on-surface transition-all group" data-path="counseling-management" href="#"><span class="material-symbols-outlined mr-md text-[22px] group-hover:text-primary">event_note</span><span class="font-label-md text-label-md">Management</span></a></nav><div class="px-md mt-auto"><button class="w-full flex items-center px-md py-sm rounded-xl text-error hover:bg-error-container/50 transition-all"><span class="material-symbols-outlined mr-md text-[22px]">logout</span><span class="font-label-md text-label-md">Log Out</span></button></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-20 bg-surface-bright/40 backdrop-blur-md z-40 flex items-center justify-end px-margin-desktop gap-lg shadow-[0_1px_4px_rgba(0,0,0,0.02)]"><div class="flex items-center bg-surface-container/50 rounded-full px-md py-xs"><span class="material-symbols-outlined text-on-surface-variant text-[20px] mr-base">search</span><input class="bg-transparent border-none focus:ring-0 text-body-sm font-body-sm w-48" placeholder="Search records..." type="text"></div><div class="flex items-center gap-md"><span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer">notifications</span><span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer">settings</span><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></header><main class="relative pt-20 min-h-screen px-margin-desktop py-lg"><div class="flex flex-col w-full h-full pb-xl">
+<div class="flex items-center justify-between mb-lg">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface mb-xs">Client Directory</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Manage and review client profiles and counseling histories.</p>
+</div>
+<button class="flex items-center gap-xs bg-primary hover:bg-primary/90 text-on-primary px-md py-sm rounded-full transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5" onclick="document.getElementById('register-modal').classList.remove('hidden')">
+<span class="material-symbols-outlined text-[20px]">person_add</span>
+<span class="font-label-md text-label-md">Register Client</span>
+</button>
+</div>
+<div class="bg-surface-container-lowest rounded-2xl shadow-sm overflow-hidden flex flex-col">
+<div class="p-md flex items-center justify-between bg-surface-container-lowest border-b border-surface-container-high relative z-10">
+<div class="flex items-center gap-sm bg-surface-container-low rounded-full px-sm py-xs w-96 transition-all focus-within:ring-2 focus-within:ring-primary/30">
+<span class="material-symbols-outlined text-on-surface-variant ml-xs">search</span>
+<input class="bg-transparent border-none focus:ring-0 font-body-sm text-body-sm text-on-surface w-full placeholder:text-on-surface-variant/60" placeholder="Search by name or birth date (YYYY-MM-DD)" type="text">
+</div>
+<div class="flex items-center gap-sm">
+<button class="flex items-center gap-xs px-sm py-xs rounded-lg hover:bg-surface-container-low text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+<span class="font-label-sm text-label-sm">Filter</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-lowest border-b border-surface-container-high">
+<th class="py-sm px-md font-label-sm text-label-sm text-on-surface-variant w-[25%]">Client Name</th>
+<th class="py-sm px-md font-label-sm text-label-sm text-on-surface-variant w-[20%]">Birth Date</th>
+<th class="py-sm px-md font-label-sm text-label-sm text-on-surface-variant w-[20%]">Registration Date</th>
+<th class="py-sm px-md font-label-sm text-label-sm text-on-surface-variant w-[25%]">Recent Request</th>
+<th class="py-sm px-md font-label-sm text-label-sm text-on-surface-variant w-[10%] text-right">Action</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm text-on-surface divide-y divide-surface-container-lowest">
+<tr class="hover:bg-surface-container-low/50 transition-colors group cursor-pointer" onclick="openDrawer()">
+<td class="py-md px-md">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-label-md text-label-md">
+                  EJ
+                </div>
+<span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">Eunji Lee</span>
+</div>
+</td>
+<td class="py-md px-md text-on-surface-variant">1992-05-14</td>
+<td class="py-md px-md text-on-surface-variant">2023-10-01</td>
+<td class="py-md px-md">
+<span class="inline-flex items-center px-sm py-xs rounded-md bg-surface-container-high text-on-surface-variant text-label-sm font-label-sm">
+                Individual Therapy
+              </span>
+</td>
+<td class="py-md px-md text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-xs rounded-full hover:bg-surface-container-high">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors group cursor-pointer" onclick="openDrawer()">
+<td class="py-md px-md">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-full bg-tertiary-container text-on-tertiary-container flex items-center justify-center font-label-md text-label-md">
+                  MJ
+                </div>
+<span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">Minjun Kim</span>
+</div>
+</td>
+<td class="py-md px-md text-on-surface-variant">1988-11-22</td>
+<td class="py-md px-md text-on-surface-variant">2023-10-15</td>
+<td class="py-md px-md">
+<span class="inline-flex items-center px-sm py-xs rounded-md bg-surface-container-high text-on-surface-variant text-label-sm font-label-sm">
+                Couples Counseling
+              </span>
+</td>
+<td class="py-md px-md text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-xs rounded-full hover:bg-surface-container-high">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors group cursor-pointer" onclick="openDrawer()">
+<td class="py-md px-md">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-label-md text-label-md">
+                  SY
+                </div>
+<span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">Seoyeon Park</span>
+</div>
+</td>
+<td class="py-md px-md text-on-surface-variant">1995-03-08</td>
+<td class="py-md px-md text-on-surface-variant">2023-11-02</td>
+<td class="py-md px-md">
+<span class="inline-flex items-center px-sm py-xs rounded-md bg-surface-container-high text-on-surface-variant text-label-sm font-label-sm">
+                Career Coaching
+              </span>
+</td>
+<td class="py-md px-md text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-xs rounded-full hover:bg-surface-container-high">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-md bg-surface-container-lowest flex items-center justify-between border-t border-surface-container-high mt-auto">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Showing 1-3 of 24 clients</span>
+<div class="flex gap-xs">
+<button class="p-xs rounded-md text-on-surface-variant hover:bg-surface-container-low disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</button>
+<button class="p-xs rounded-md text-on-surface-variant hover:bg-surface-container-low">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<div class="fixed inset-0 bg-inverse-surface/20 backdrop-blur-sm z-[60] hidden opacity-0 transition-opacity duration-300" id="client-drawer-overlay" onclick="closeDrawer()"></div>
+<div class="fixed top-0 right-0 h-full w-[600px] bg-surface-container-lowest z-[70] shadow-2xl translate-x-full transition-transform duration-300 ease-out flex flex-col rounded-l-3xl overflow-hidden" id="client-drawer">
+<div class="p-lg bg-surface-container-low flex items-start justify-between relative shrink-0">
+<div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 80% 20%, var(--tw-colors-primary) 0%, transparent 40%);"></div>
+<div class="flex items-center gap-md relative z-10">
+<div class="w-16 h-16 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-display-lg text-display-lg">
+          EJ
+        </div>
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-xs">Eunji Lee</h2>
+<div class="flex gap-sm font-label-sm text-label-sm text-on-surface-variant">
+<span>Born: 1992-05-14 (31y)</span>
+<span>•</span>
+<span>Reg: 2023-10-01</span>
+</div>
+</div>
+</div>
+<button class="p-xs rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors relative z-10" onclick="closeDrawer()">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto p-lg bg-surface-container-lowest">
+<div class="mb-lg">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-md">Personal Information</h3>
+<div class="grid grid-cols-2 gap-md">
+<div class="bg-surface-container-low p-sm rounded-xl">
+<span class="block font-label-sm text-label-sm text-on-surface-variant mb-xs">Contact</span>
+<span class="block font-body-md text-body-md text-on-surface">010-1234-5678</span>
+</div>
+<div class="bg-surface-container-low p-sm rounded-xl">
+<span class="block font-label-sm text-label-sm text-on-surface-variant mb-xs">Email</span>
+<span class="block font-body-md text-body-md text-on-surface">eunji.lee@email.com</span>
+</div>
+<div class="bg-surface-container-low p-sm rounded-xl col-span-2">
+<span class="block font-label-sm text-label-sm text-on-surface-variant mb-xs">Address</span>
+<span class="block font-body-md text-body-md text-on-surface">123 Serenity Lane, Wellness District, Seoul</span>
+</div>
+</div>
+</div>
+<div class="mb-lg">
+<div class="flex items-center justify-between mb-md">
+<h3 class="font-headline-md text-headline-md text-on-surface">Counseling History</h3>
+<button class="text-primary hover:bg-primary-container/30 px-sm py-xs rounded-lg font-label-md text-label-md transition-colors flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">add</span> Assign
+          </button>
+</div>
+<div class="relative border-l-2 border-surface-container-high ml-sm space-y-md">
+<div class="relative pl-md">
+<div class="absolute w-3 h-3 bg-primary rounded-full -left-[7px] top-1.5 ring-4 ring-surface-container-lowest"></div>
+<div class="bg-surface-container p-md rounded-2xl">
+<div class="flex justify-between items-start mb-sm">
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Individual Therapy</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Assigned to Dr. Park</span>
+</div>
+<span class="font-label-sm text-label-sm bg-primary-container text-on-primary-container px-sm py-xs rounded-md">Scheduled</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Focus: Anxiety management and work-life balance.</p>
+<div class="mt-sm font-label-sm text-label-sm text-on-surface-variant flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">calendar_today</span> 2023-11-15, 14:00
+              </div>
+</div>
+</div>
+<div class="relative pl-md">
+<div class="absolute w-3 h-3 bg-surface-container-high rounded-full -left-[7px] top-1.5 ring-4 ring-surface-container-lowest"></div>
+<div class="bg-surface p-md rounded-2xl border border-surface-container-high">
+<div class="flex justify-between items-start mb-sm">
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Initial Assessment</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Assigned to Dr. Kim</span>
+</div>
+<span class="font-label-sm text-label-sm bg-surface-container-high text-on-surface-variant px-sm py-xs rounded-md">Completed</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Initial intake and psychological evaluation completed.</p>
+<div class="mt-sm font-label-sm text-label-sm text-on-surface-variant flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">check_circle</span> 2023-10-05, 10:00
+              </div>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-lg pt-lg border-t border-surface-container-high">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-md">Assign New Counseling</h3>
+<div class="space-y-md">
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-xs">Select Counseling Type</label>
+<div class="relative">
+<select class="w-full appearance-none bg-surface-container-low border border-surface-container-high rounded-xl px-md py-sm font-body-md text-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-on-surface">
+<option value="individual">Individual Therapy</option>
+<option value="couple">Couple Counseling</option>
+<option value="depression">Depression/Anxiety</option>
+<option value="stress">Stress/Burnout</option>
+<option value="youth">Youth Counseling</option>
+</select>
+<span class="material-symbols-outlined absolute right-md top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">expand_more</span>
+</div>
+</div>
+<div class="flex items-center justify-between p-sm bg-surface-container-low rounded-xl">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">info</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Status will be set to 'Pending'</span>
+</div>
+<button class="bg-primary hover:bg-primary/90 text-on-primary px-lg py-sm rounded-full font-label-md text-label-md shadow-sm transition-all hover:shadow-md">
+        Assign (배정하기)
+      </button>
+</div>
+</div>
+</div></div>
+</div>
+<div class="fixed inset-0 z-[80] hidden flex items-center justify-center" id="register-modal">
+<div class="absolute inset-0 bg-inverse-surface/40 backdrop-blur-sm" onclick="document.getElementById('register-modal').classList.add('hidden')"></div>
+<div class="bg-surface-container-lowest rounded-3xl shadow-xl w-full max-w-lg relative z-10 overflow-hidden flex flex-col max-h-[921px]">
+<div class="p-lg bg-surface-container border-b border-surface-container-high flex justify-between items-center shrink-0">
+<h2 class="font-headline-md text-headline-md text-on-surface">Register New Client</h2>
+<button class="p-xs rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors" onclick="document.getElementById('register-modal').classList.add('hidden')">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="p-lg overflow-y-auto space-y-md">
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-xs">Full Name</label>
+<input class="w-full bg-surface-container-low border border-surface-container-high rounded-xl px-md py-sm font-body-md text-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors" type="text">
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-xs">Birth Date</label>
+<input class="w-full bg-surface-container-low border border-surface-container-high rounded-xl px-md py-sm font-body-md text-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-on-surface" type="date">
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-xs">Phone Number</label>
+<input class="w-full bg-surface-container-low border border-surface-container-high rounded-xl px-md py-sm font-body-md text-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors" type="tel">
+</div>
+</div>
+<div class="p-md bg-surface-container-lowest border-t border-surface-container-high flex justify-end gap-sm shrink-0">
+<button class="px-md py-sm rounded-full font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low transition-colors" onclick="document.getElementById('register-modal').classList.add('hidden')">Cancel</button>
+<button class="px-md py-sm rounded-full bg-primary hover:bg-primary/90 text-on-primary font-label-md text-label-md shadow-sm transition-colors">Save Client</button>
+</div>
+</div>
+</div>
+</div>
+<script>
+  function openDrawer() {
+    const overlay = document.getElementById('client-drawer-overlay');
+    const drawer = document.getElementById('client-drawer');
+    
+    overlay.classList.remove('hidden');
+    // slight delay to allow display:block to apply before animating opacity
+    setTimeout(() => {
+      overlay.classList.remove('opacity-0');
+      drawer.classList.remove('translate-x-full');
+    }, 10);
+  }
+
+  function closeDrawer() {
+    const overlay = document.getElementById('client-drawer-overlay');
+    const drawer = document.getElementById('client-drawer');
+    
+    overlay.classList.add('opacity-0');
+    drawer.classList.add('translate-x-full');
+    
+    setTimeout(() => {
+      overlay.classList.add('hidden');
+    }, 300); // match transition duration
+  }
+</script></main></div></body></html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&amp;family=Noto+Sans:wght@400;600&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={theme:{extend:{"colors":{"error-container":"#ffdad6","secondary-fixed":"#e1e1f5","on-background":"#0d1d2a","outline":"#74796c","on-secondary-fixed":"#191b29","tertiary":"#5e604d","secondary-container":"#e1e1f5","on-tertiary-container":"#353726","error":"#ba1a1a","secondary":"#5c5d6e","on-secondary-fixed-variant":"#444655","inverse-primary":"#aed18f","on-primary-fixed-variant":"#314e1b","on-tertiary":"#ffffff","on-primary":"#ffffff","on-secondary-container":"#626374","surface-tint":"#486730","on-error":"#ffffff","on-tertiary-fixed-variant":"#474836","on-tertiary-fixed":"#1b1d0e","on-error-container":"#93000a","primary-container":"#87a96b","surface-container-highest":"#d4e4f6","tertiary-container":"#9fa08a","primary":"#486730","primary-fixed":"#c9eea9","surface":"#f7f9ff","inverse-surface":"#223240","surface-container":"#e2efff","surface-container-low":"#ecf4ff","on-primary-fixed":"#0b2000","surface-dim":"#cbdcee","secondary-fixed-dim":"#c5c5d8","surface-bright":"#f7f9ff","on-surface":"#0d1d2a","on-secondary":"#ffffff","inverse-on-surface":"#e7f2ff","on-primary-container":"#213d0b","tertiary-fixed":"#e4e4cc","background":"#f7f9ff","primary-fixed-dim":"#aed18f","on-surface-variant":"#43483d","surface-variant":"#d4e4f6","surface-container-high":"#d9eafc","tertiary-fixed-dim":"#c8c8b0","surface-container-lowest":"#ffffff","outline-variant":"#c4c8ba"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"margin-mobile":"16px","xl":"64px","md":"24px","margin-desktop":"48px","gutter":"24px","xs":"4px","sm":"12px","base":"8px","lg":"40px"},"fontFamily":{"body-md":["Noto Sans"],"headline-lg":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"label-sm":["Noto Sans"],"body-lg":["Noto Sans"],"body-sm":["Noto Sans"],"label-md":["Noto Sans"],"display-lg":["Plus Jakarta Sans"]},"fontSize":{"body-md":["16px",{"lineHeight":"24px","fontWeight":"400"}],"headline-lg":["32px",{"lineHeight":"40px","letterSpacing":"-0.01em","fontWeight":"600"}],"headline-sm":["20px",{"lineHeight":"28px","fontWeight":"600"}],"headline-md":["24px",{"lineHeight":"32px","fontWeight":"600"}],"label-sm":["12px",{"lineHeight":"14px","letterSpacing":"0.05em","fontWeight":"600"}],"body-lg":["18px",{"lineHeight":"28px","fontWeight":"400"}],"body-sm":["14px",{"lineHeight":"20px","fontWeight":"400"}],"label-md":["14px",{"lineHeight":"16px","letterSpacing":"0.05em","fontWeight":"600"}],"display-lg":["40px",{"lineHeight":"48px","letterSpacing":"-0.02em","fontWeight":"700"}]}}}}</script></head><body class="bg-background font-body-md text-on-surface"><header class="fixed top-0 w-full z-50 bg-surface-bright/60 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 max-w-7xl mx-auto px-6 lg:px-12 flex items-center justify-between"><div class="flex items-center gap-base"><span class="material-symbols-outlined text-primary text-[28px]">spa</span><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight">Serenity Portal</span></div><nav class="hidden md:flex items-center gap-lg" data-active-classes="text-primary font-semibold underline decoration-2 underline-offset-8"><a aria-current="page" class="transition-colors text-primary font-semibold underline decoration-2 underline-offset-8" data-path="client-home" href="#">My Sessions</a><a class="text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors" data-path="resources" href="#">Resources</a><a class="text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors" data-path="messages" href="#">Messages</a></nav><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></header><main class="w-full pt-16 bg-background"><div class="flex flex-col w-full min-h-[calc(100vh-64px)] bg-surface relative overflow-hidden">
+<!-- Ambient Background -->
+<div class="absolute inset-0 pointer-events-none overflow-hidden">
+<div class="absolute -top-[20%] -left-[10%] w-[50vw] h-[50vw] rounded-full bg-primary/5 blur-[100px]"></div>
+<div class="absolute top-[40%] -right-[20%] w-[60vw] h-[60vw] rounded-full bg-secondary-fixed/30 blur-[120px]"></div>
+</div>
+<!-- Main Content -->
+<div class="flex-1 w-full max-w-7xl mx-auto px-6 lg:px-12 py-lg lg:py-xl z-10 flex flex-col gap-lg">
+<!-- Header Section -->
+<div class="flex flex-col gap-sm max-w-2xl">
+<span class="text-label-sm font-label-sm text-primary tracking-widest uppercase">Intake Assessment</span>
+<h1 class="text-display-lg font-display-lg text-on-surface">
+<span class="text-primary font-bold" id="client-name-display">김지수</span>님,<br>
+                어떤 상담이 필요하신가요?
+            </h1>
+<p class="text-body-lg font-body-lg text-on-surface-variant mt-2">
+                현재 가장 고민되거나 도움이 필요한 영역을 선택해주세요. 복수 선택이 가능하며, 이는 담당 상담사 배정에 참고됩니다.
+            </p>
+</div>
+<!-- Counseling Types Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md" id="counseling-grid"><!-- Individual Therapy Card -->
+<div class="group relative p-6 rounded-2xl bg-surface-container-lowest border border-primary shadow-md cursor-pointer transition-all duration-300 flex flex-col gap-4 overflow-hidden" data-id="c1">
+<div class="absolute inset-0 bg-primary/5 opacity-100 pointer-events-none"></div>
+<div class="absolute top-6 right-6 w-6 h-6 rounded-full border-2 border-primary bg-primary flex items-center justify-center transition-colors duration-200">
+<span class="material-symbols-outlined text-[16px] text-white opacity-100 transform scale-100">check</span>
+</div>
+<div class="w-12 h-12 rounded-xl bg-primary flex items-center justify-center transition-colors duration-300">
+<span class="material-symbols-outlined text-[24px] text-on-primary">person</span>
+</div>
+<div>
+<h3 class="text-headline-sm font-headline-sm text-on-surface mb-1">개인 심리 상담</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant line-clamp-2">우울, 불안, 대인관계 등 개인적인 심리적 어려움</p>
+</div>
+<div class="mt-auto">
+<span class="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-2 py-1 rounded-full">Assigned</span>
+</div>
+</div>
+<!-- Couples Counseling Card -->
+<div class="group relative p-6 rounded-2xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm hover:shadow-md cursor-pointer transition-all duration-300 flex flex-col gap-4 overflow-hidden" data-id="c2">
+<div class="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+<div class="absolute top-6 right-6 w-6 h-6 rounded-full border-2 border-outline-variant flex items-center justify-center transition-colors duration-200">
+<span class="material-symbols-outlined text-[16px] text-white opacity-0 transform scale-50 transition-all duration-200">check</span>
+</div>
+<div class="w-12 h-12 rounded-xl bg-secondary-container flex items-center justify-center transition-colors duration-300">
+<span class="material-symbols-outlined text-[24px] text-on-secondary-container">family_restroom</span>
+</div>
+<div>
+<h3 class="text-headline-sm font-headline-sm text-on-surface mb-1">부부/가족 상담</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant line-clamp-2">부부 갈등, 자녀 양육, 가족 내 소통 문제</p>
+</div>
+<div class="mt-auto">
+<span class="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-2 py-1 rounded-full">Assigned</span>
+</div>
+</div></div>
+<!-- Action Area -->
+<div class="flex justify-end mt-lg pt-lg border-t border-outline-variant/30">
+<button class="px-8 py-4 bg-primary text-on-primary rounded-full text-label-md font-label-md shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-md flex items-center gap-xs group" id="submit-btn">답변 작성하기
+                <span class="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">arrow_forward</span></button>
+</div>
+</div>
+<!-- Confirmation Modal Overlay -->
+<div class="fixed inset-0 z-[100] bg-inverse-surface/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center p-6" id="confirm-modal">
+<div class="bg-surface rounded-2xl p-8 max-w-md w-full shadow-xl transform scale-95 transition-transform duration-300" id="modal-content">
+<div class="flex items-center justify-center w-16 h-16 rounded-full bg-primary-container mb-6 mx-auto">
+<span class="material-symbols-outlined text-[32px] text-on-primary-container">spa</span>
+</div>
+<h3 class="text-headline-sm font-headline-sm text-center text-on-surface mb-2">선택을 완료하시겠습니까?</h3>
+<p class="text-body-md font-body-md text-center text-on-surface-variant mb-8">
+                선택하신 내용으로 초기 접수 면접이 신청됩니다. 이후 일정 조율을 위해 담당자가 연락을 드릴 예정입니다.
+            </p>
+<div class="flex gap-4">
+<button class="flex-1 py-3 px-4 rounded-full border border-outline text-on-surface text-label-md font-label-md hover:bg-surface-variant transition-colors" id="cancel-modal">
+                    돌아가기
+                </button>
+<button class="flex-1 py-3 px-4 rounded-full bg-primary text-on-primary text-label-md font-label-md shadow-sm hover:shadow-md transition-shadow" id="confirm-submit">
+                    신청 완료
+                </button>
+</div>
+</div>
+</div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Default Data Fallback
+        const defaultCounselingTypes = [
+            { id: 'c1', title: '개인 심리 상담', desc: '우울, 불안, 대인관계 등 개인적인 심리적 어려움', icon: 'person', isActive: true },
+            { id: 'c2', title: '부부/가족 상담', desc: '부부 갈등, 자녀 양육, 가족 내 소통 문제', icon: 'family_restroom', isActive: true },
+            { id: 'c3', title: '우울/불안 관리', desc: '일상생활에 지장을 주는 지속적인 우울감과 불안', icon: 'mood_bad', isActive: true },
+            { id: 'c4', title: '스트레스/번아웃', desc: '직장, 학업 등으로 인한 극심한 스트레스 및 무기력', icon: 'battery_0_bar', isActive: true },
+            { id: 'c5', title: '청소년 진로 상담', desc: '학업 스트레스, 진로 탐색, 청소년기 정서 문제', icon: 'school', isActive: true },
+            { id: 'c6', title: '중독 상담', desc: '알코올, 게임, 스마트폰 등 행동/물질 중독', icon: 'sports_esports', isActive: false } // Inactive example
+        ];
+
+        // Retrieve or initialize data from LocalStorage
+        let storedTypes = JSON.parse(localStorage.getItem('counselingTypes'));
+        if (!storedTypes || storedTypes.length === 0) {
+            localStorage.setItem('counselingTypes', JSON.stringify(defaultCounselingTypes));
+            storedTypes = defaultCounselingTypes;
+        }
+
+        const activeTypes = storedTypes.filter(type => type.isActive);
+        const gridContainer = document.getElementById('counseling-grid');
+        const submitBtn = document.getElementById('submit-btn');
+        let selectedIds = new Set();
+
+        // Render Cards
+        activeTypes.forEach(type => {
+            const card = document.createElement('div');
+            card.className = `
+                group relative p-6 rounded-2xl bg-surface-container-lowest border border-outline-variant/30 
+                shadow-[0_8px_32px_rgba(112,128,144,0.04)] hover:shadow-[0_16px_48px_rgba(112,128,144,0.12)]
+                cursor-pointer transition-all duration-300 flex flex-col gap-4 overflow-hidden
+            `;
+            card.dataset.id = type.id;
+            
+            card.innerHTML = `
+                <div class="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                <div class="absolute top-6 right-6 w-6 h-6 rounded-full border-2 border-outline-variant flex items-center justify-center transition-colors duration-200 check-circle">
+                    <span class="material-symbols-outlined text-[16px] text-white opacity-0 transform scale-50 transition-all duration-200 check-icon">check</span>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-secondary-container flex items-center justify-center icon-container transition-colors duration-300">
+                    <span class="material-symbols-outlined text-[24px] text-on-secondary-container">${type.icon || 'psychiatry'}</span>
+                </div>
+                <div>
+                    <h3 class="text-headline-sm font-headline-sm text-on-surface mb-1">${type.title}</h3>
+                    <p class="text-body-sm font-body-sm text-on-surface-variant line-clamp-2">${type.desc}</p>
+                </div>
+            `;
+
+            card.addEventListener('click', () => toggleSelection(card, type.id));
+            gridContainer.appendChild(card);
+        });
+
+        // Toggle Logic
+        function toggleSelection(cardElement, id) {
+            const checkCircle = cardElement.querySelector('.check-circle');
+            const checkIcon = cardElement.querySelector('.check-icon');
+            const iconContainer = cardElement.querySelector('.icon-container');
+
+            if (selectedIds.has(id)) {
+                selectedIds.delete(id);
+                // Deselect styles
+                cardElement.classList.remove('border-primary', 'bg-primary-fixed/10');
+                cardElement.classList.add('border-outline-variant/30', 'bg-surface-container-lowest');
+                checkCircle.classList.remove('border-primary', 'bg-primary');
+                checkCircle.classList.add('border-outline-variant');
+                checkIcon.classList.remove('opacity-100', 'scale-100');
+                checkIcon.classList.add('opacity-0', 'scale-50');
+                iconContainer.classList.remove('bg-primary', 'text-on-primary');
+                iconContainer.classList.add('bg-secondary-container');
+                iconContainer.querySelector('span').classList.remove('text-on-primary');
+                iconContainer.querySelector('span').classList.add('text-on-secondary-container');
+            } else {
+                selectedIds.add(id);
+                // Select styles
+                cardElement.classList.remove('border-outline-variant/30', 'bg-surface-container-lowest');
+                cardElement.classList.add('border-primary', 'bg-primary-fixed/10');
+                checkCircle.classList.remove('border-outline-variant');
+                checkCircle.classList.add('border-primary', 'bg-primary');
+                checkIcon.classList.remove('opacity-0', 'scale-50');
+                checkIcon.classList.add('opacity-100', 'scale-100');
+                iconContainer.classList.remove('bg-secondary-container');
+                iconContainer.classList.add('bg-primary');
+                iconContainer.querySelector('span').classList.remove('text-on-secondary-container');
+                iconContainer.querySelector('span').classList.add('text-on-primary');
+            }
+
+            updateSubmitButton();
+        }
+
+        function updateSubmitButton() {
+            if (selectedIds.size > 0) {
+                submitBtn.disabled = false;
+            } else {
+                submitBtn.disabled = true;
+            }
+        }
+        updateSubmitButton(); // Init state
+
+        // Modal Logic
+        const modal = document.getElementById('confirm-modal');
+        const modalContent = document.getElementById('modal-content');
+        const cancelBtn = document.getElementById('cancel-modal');
+        const confirmSubBtn = document.getElementById('confirm-submit');
+
+        submitBtn.addEventListener('click', () => {
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modalContent.classList.remove('scale-95');
+            modalContent.classList.add('scale-100');
+        });
+
+        const closeModal = () => {
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            modalContent.classList.remove('scale-100');
+            modalContent.classList.add('scale-95');
+        };
+
+        cancelBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+        confirmSubBtn.addEventListener('click', () => {
+            // Mock API call or redirect
+            confirmSubBtn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span> 처리중...';
+            confirmSubBtn.disabled = true;
+            
+            setTimeout(() => {
+                alert(`선택된 상담 ID [${Array.from(selectedIds).join(', ')}] 제출 완료.`);
+                closeModal();
+                confirmSubBtn.innerHTML = '신청 완료';
+                confirmSubBtn.disabled = false;
+            }, 800);
+        });
+    });
+</script></main><footer class="w-full bg-surface-container-low py-12"><div class="max-w-7xl mx-auto px-6 lg:px-12 flex flex-col md:flex-row justify-between items-center gap-md text-on-surface-variant text-label-sm font-label-sm"><div class="flex items-center gap-base"><span class="material-symbols-outlined text-primary text-[20px]">spa</span><span class="">© 2024 Serenity Counseling Systems.</span></div><div class="flex gap-lg"><span class="">Privacy Policy</span><span class="">Terms of Care</span><span class="">Emergency Contacts</span></div></div></footer>
+
+</body></html>

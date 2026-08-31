@@ -1,0 +1,132 @@
+<!DOCTYPE html><html lang="en" style=""><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&amp;family=Noto+Sans:wght@400;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={theme:{extend:{"colors":{"error-container":"#ffdad6","secondary-fixed":"#e1e1f5","on-background":"#0d1d2a","outline":"#74796c","on-secondary-fixed":"#191b29","tertiary":"#5e604d","secondary-container":"#e1e1f5","on-tertiary-container":"#353726","error":"#ba1a1a","secondary":"#5c5d6e","on-secondary-fixed-variant":"#444655","inverse-primary":"#aed18f","on-primary-fixed-variant":"#314e1b","on-tertiary":"#ffffff","on-primary":"#ffffff","on-secondary-container":"#626374","surface-tint":"#486730","on-error":"#ffffff","on-tertiary-fixed-variant":"#474836","on-tertiary-fixed":"#1b1d0e","on-error-container":"#93000a","primary-container":"#87a96b","surface-container-highest":"#d4e4f6","tertiary-container":"#9fa08a","primary":"#486730","primary-fixed":"#c9eea9","surface":"#f7f9ff","inverse-surface":"#223240","surface-container":"#e2efff","surface-container-low":"#ecf4ff","on-primary-fixed":"#0b2000","surface-dim":"#cbdcee","secondary-fixed-dim":"#c5c5d8","surface-bright":"#f7f9ff","on-surface":"#0d1d2a","on-secondary":"#ffffff","inverse-on-surface":"#e7f2ff","on-primary-container":"#213d0b","tertiary-fixed":"#e4e4cc","background":"#f7f9ff","primary-fixed-dim":"#aed18f","on-surface-variant":"#43483d","surface-variant":"#d4e4f6","surface-container-high":"#d9eafc","tertiary-fixed-dim":"#c8c8b0","surface-container-lowest":"#ffffff","outline-variant":"#c4c8ba"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"margin-mobile":"16px","xl":"64px","md":"24px","margin-desktop":"48px","gutter":"24px","xs":"4px","sm":"12px","base":"8px","lg":"40px"},"fontFamily":{"body-md":["Noto Sans"],"headline-lg":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"label-sm":["Noto Sans"],"body-lg":["Noto Sans"],"body-sm":["Noto Sans"],"label-md":["Noto Sans"],"display-lg":["Plus Jakarta Sans"]},"fontSize":{"body-md":["16px",{"lineHeight":"24px","fontWeight":"400"}],"headline-lg":["32px",{"lineHeight":"40px","letterSpacing":"-0.01em","fontWeight":"600"}],"headline-sm":["20px",{"lineHeight":"28px","fontWeight":"600"}],"headline-md":["24px",{"lineHeight":"32px","fontWeight":"600"}],"label-sm":["12px",{"lineHeight":"14px","letterSpacing":"0.05em","fontWeight":"600"}],"body-lg":["18px",{"lineHeight":"28px","fontWeight":"400"}],"body-sm":["14px",{"lineHeight":"20px","fontWeight":"400"}],"label-md":["14px",{"lineHeight":"16px","letterSpacing":"0.05em","fontWeight":"600"}],"display-lg":["40px",{"lineHeight":"48px","letterSpacing":"-0.02em","fontWeight":"700"}]}}}}</script></head><body class="bg-background flex items-center justify-center min-h-screen" style="height: 899px; overflow: hidden; background-color: rgb(224, 236, 219);"><main class="w-full max-w-md h-full flex items-center justify-center"><div class="flex flex-col w-full h-full justify-center px-margin-mobile md:px-margin-desktop overflow-hidden">
+<!-- Ambient background elements -->
+
+<div class="w-full max-w-md mx-auto relative z-10 flex flex-col">
+<!-- Logo / Brand Area -->
+<div class="flex flex-col items-center justify-center mb-lg space-y-md">
+<div class="w-24 h-24 rounded-full bg-surface-container-lowest shadow-sm flex items-center justify-center p-xs">
+<svg class="w-full h-full text-primary" fill="currentColor" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+<path d="M50 15 C60 15, 65 30, 65 40 C65 60, 50 85, 50 85 C50 85, 35 60, 35 40 C35 30, 40 15, 50 15 Z" opacity="0.6"></path>
+<path d="M50 85 C65 75, 85 60, 85 45 C85 30, 70 20, 55 35 C50 40, 50 85, 50 85 Z" opacity="0.4"></path>
+<path d="M50 85 C35 75, 15 60, 15 45 C15 30, 30 20, 45 35 C50 40, 50 85, 50 85 Z" opacity="0.8"></path>
+<circle cx="50" cy="40" fill="white" r="8"></circle>
+</svg>
+</div>
+<div class="text-center space-y-xs">
+<h1 class="font-headline-lg text-headline-lg text-on-surface">심리상담센터</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">마음의 휴식을 드리는 심리상담소입니다.</p>
+</div>
+</div>
+<!-- Login Card -->
+<div class="bg-surface-container-lowest/80 backdrop-blur-md rounded-2xl shadow-md p-md border border-outline-variant/30 flex flex-col space-y-md">
+<form class="flex flex-col space-y-sm" id="clientLoginForm" onsubmit="event.preventDefault(); handleLogin();">
+<div class="flex flex-col space-y-xs relative">
+<label class="font-label-md text-label-md text-on-surface" for="clientName">이름</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant/50 pointer-events-none">person</span>
+<input class="w-full bg-surface/50 border border-outline-variant/50 rounded-lg py-sm pl-[40px] pr-sm font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-on-surface-variant/40" id="clientName" placeholder="홍길동" required="" type="text">
+</div>
+</div>
+<div class="flex flex-col space-y-xs relative">
+<label class="font-label-md text-label-md text-on-surface" for="clientBirth">생년월일</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant/50 pointer-events-none">calendar_month</span>
+<input class="w-full bg-surface/50 border border-outline-variant/50 rounded-lg py-sm pl-[40px] pr-sm font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-on-surface-variant/40" id="clientBirth" pattern="\d{4}-\d{2}-\d{2}" placeholder="YYYY-MM-DD" required="" type="text">
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant/70 text-right mt-1">예: 1990-01-01</p>
+</div>
+<button class="mt-md w-full bg-primary text-on-primary font-label-md text-label-md py-sm rounded-full shadow-sm hover:bg-surface-tint hover:shadow-md transition-all active:scale-[0.98] flex items-center justify-center space-x-2" type="submit">
+<span class="">로그인 / 상담 신청 시작</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</form>
+</div>
+</div>
+<!-- Admin Link -->
+<div class="absolute bottom-margin-mobile md:bottom-margin-desktop right-margin-mobile md:right-margin-desktop z-20">
+<button class="flex items-center space-x-1 text-on-surface-variant/60 hover:text-primary transition-colors font-label-sm text-label-sm group" onclick="window.location.href='/admin-login'">
+<span class="material-symbols-outlined text-[16px] group-hover:rotate-12 transition-transform">admin_panel_settings</span>
+<span class="">관리자 로그인</span>
+</button>
+</div>
+<!-- Toast Container -->
+<div class="fixed bottom-xl left-1/2 -translate-x-1/2 z-50 flex flex-col space-y-2 pointer-events-none" id="toastContainer"></div>
+<script>
+    // Simple date formatter for UX
+    const birthInput = document.getElementById('clientBirth');
+    birthInput.addEventListener('input', function(e) {
+      let val = e.target.value.replace(/\D/g, '');
+      if (val.length > 8) val = val.slice(0, 8);
+      if (val.length >= 4 && val.length < 6) {
+        val = val.slice(0, 4) + '-' + val.slice(4);
+      } else if (val.length >= 6) {
+        val = val.slice(0, 4) + '-' + val.slice(4, 6) + '-' + val.slice(6);
+      }
+      e.target.value = val;
+    });
+
+    function showToast(message, type = 'error') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      
+      const bgColor = type === 'error' ? 'bg-secondary' : 'bg-primary-container';
+      const textColor = type === 'error' ? 'text-on-secondary' : 'text-on-primary-container';
+      const icon = type === 'error' ? 'error' : 'check_circle';
+
+      toast.className = `flex items-center space-x-2 ${bgColor} ${textColor} px-md py-sm rounded-full shadow-lg transform transition-all duration-300 translate-y-4 opacity-0 font-body-sm text-body-sm max-w-sm w-full`;
+      
+      toast.innerHTML = `
+        <span class="material-symbols-outlined text-[20px]">${icon}</span>
+        <span>${message}</span>
+      `;
+      
+      container.appendChild(toast);
+      
+      // Animate in
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-4', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+      });
+
+      // Animate out and remove
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-4', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    function handleLogin() {
+      const name = document.getElementById('clientName').value.trim();
+      const birth = document.getElementById('clientBirth').value.trim();
+
+      if (!name || !birth) return;
+
+      // Mock LocalStorage Check
+      // In a real app, you'd fetch this. We simulate the logic here.
+      let clients = [];
+      try {
+        const stored = localStorage.getItem('Clients');
+        if (stored) clients = JSON.parse(stored);
+      } catch (e) {
+        console.error("Error reading localStorage", e);
+      }
+
+      // For demonstration if localStorage is empty, we fail. 
+      // You can add a dummy user here for testing:
+      // clients = [{ name: '홍길동', birth: '1990-01-01' }];
+
+      const isRegistered = clients.some(client => client.name === name && client.birth === birth);
+
+      if (isRegistered) {
+        showToast('로그인 성공. 상담 선택 페이지로 이동합니다.', 'success');
+        // setTimeout(() => window.location.href = '/counseling-selection', 1000);
+      } else {
+        showToast('등록되지 않은 내담자 정보입니다. 상담소 데스크에 문의하여 등록해 주세요.');
+      }
+    }
+  </script>
+</div></main>
+
+</body></html>

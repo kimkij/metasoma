@@ -1892,19 +1892,9 @@ async function renderClientDirectory() {
       year: "numeric", month: "2-digit", day: "2-digit"
     });
 
-    const initials = getInitials(client.name);
-
     tr.innerHTML = `
       <td class="py-md px-md">
-        <div class="flex items-center gap-sm">
-          <div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-label-md text-label-md flex-shrink-0">
-            ${initials}
-          </div>
-          <div class="flex flex-col">
-            <span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">${client.name}</span>
-            <span class="text-[11px] text-on-surface-variant/70 font-normal">등록 내담자</span>
-          </div>
-        </div>
+        <span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors font-medium">${client.name}</span>
       </td>
       <td class="py-md px-md text-on-surface-variant">${birthStr}</td>
       <td class="py-md px-md text-on-surface-variant">${phoneStr}</td>

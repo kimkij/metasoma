@@ -1935,8 +1935,8 @@ async function renderClientDirectory() {
           }
         </div>
       </td>
-      <td class="py-md px-md text-right">
-        <div class="flex flex-col gap-xs items-end">
+      <td class="py-md px-md text-left">
+        <div class="flex flex-col gap-xs items-start">
           ${clientRecords.length > 0 
             ? clientRecords.map(r => {
                 let currentBadgeClass = "bg-surface-container-high text-on-surface-variant";

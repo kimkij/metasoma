@@ -1289,8 +1289,7 @@ async function renderClientSelectCards() {
         </div>
         <h3 class="font-headline-sm text-headline-sm text-on-surface mb-2 font-semibold">배정된 상담 프로그램이 없습니다</h3>
         <p class="font-body-md text-body-md text-on-surface-variant max-w-md leading-relaxed">
-          관리자가 내담자에게 상담 프로그램을 배정한 후 이곳에 표시됩니다.<br />
-          상담소 또는 담당 관리자에게 배정 요청을 문의해 주세요.
+          아직 상담 프로그램이 배정되지 않았습니다. 담당자에게 문의해주세요.
         </p>
       </div>
     `;

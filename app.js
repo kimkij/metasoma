@@ -190,9 +190,9 @@ function validatePassword(password) {
 }
 
 const DEFAULT_CLIENTS = [
-  { id: "client1", username: "jisoo", passwordHash: "d37803e1e2cfc23d4e0e5a8747f20108922236ad68434bbd89851ee83eaec99b", name: "김지수", birthDate: "19900101", phone: "010-1234-5678", createdAt: Date.now() - 86400000 * 3 },
-  { id: "client2", username: "maum", passwordHash: "d37803e1e2cfc23d4e0e5a8747f20108922236ad68434bbd89851ee83eaec99b", name: "이마음", birthDate: "19950505", phone: "010-2345-6789", createdAt: Date.now() - 86400000 * 2 },
-  { id: "client3", username: "joy", passwordHash: "d37803e1e2cfc23d4e0e5a8747f20108922236ad68434bbd89851ee83eaec99b", name: "박기쁨", birthDate: "19881225", phone: "010-3456-7890", createdAt: Date.now() - 86400000 * 1 }
+  { id: "client1", name: "김지수", birthDate: "19900101", phone: "010-1234-5678", createdAt: Date.now() - 86400000 * 3 },
+  { id: "client2", name: "이마음", birthDate: "19950505", phone: "010-2345-6789", createdAt: Date.now() - 86400000 * 2 },
+  { id: "client3", name: "박기쁨", birthDate: "19881225", phone: "010-3456-7890", createdAt: Date.now() - 86400000 * 1 }
 ];
 
 const DEFAULT_ADMINS = [
@@ -312,8 +312,6 @@ async function initFirebaseData() {
       for (const client of DEFAULT_CLIENTS) {
         const docRef = await window.db.collection("clients").add({
           name: client.name,
-          username: client.username || null,
-          passwordHash: client.passwordHash || null,
           birthDate: client.birthDate,
           phone: client.phone || "010-0000-0000",
           createdAt: client.createdAt
@@ -451,16 +449,13 @@ async function dbGetClients() {
   }
 }
 
-async function dbAddClient(name, birthDate, phone, username = null, passwordHash = null) {
+async function dbAddClient(name, birthDate, phone) {
   const normalizedBirth = birthDate.trim().replace(/-/g, "");
   const cleanPhone = phone.trim();
-  const cleanUsername = username ? username.trim() : null;
   
   if (window.isFirebaseMode) {
     const docRef = await window.db.collection("clients").add({
       name: name.trim(),
-      username: cleanUsername,
-      passwordHash: passwordHash || null,
       birthDate: normalizedBirth,
       phone: cleanPhone,
       createdAt: Date.now()
@@ -472,35 +467,12 @@ async function dbAddClient(name, birthDate, phone, username = null, passwordHash
     clients.unshift({
       id: newId,
       name: name.trim(),
-      username: cleanUsername,
-      passwordHash: passwordHash || null,
       birthDate: normalizedBirth,
       phone: cleanPhone,
       createdAt: Date.now()
     });
     localStorage.setItem("crm_clients", JSON.stringify(clients));
     return newId;
-  }
-}
-
-// 기존 내담자 정보에 회원가입 인증 정보(아이디, 암호화된 비밀번호) 연동/덮어쓰기
-async function dbUpdateClientAuth(clientId, username, passwordHash) {
-  const cleanUsername = username.trim();
-  if (window.isFirebaseMode) {
-    await window.db.collection("clients").doc(clientId).update({
-      username: cleanUsername,
-      passwordHash: passwordHash,
-      updatedAt: Date.now()
-    });
-  } else {
-    const clients = await dbGetClients();
-    const client = clients.find(c => c.id === clientId);
-    if (client) {
-      client.username = cleanUsername;
-      client.passwordHash = passwordHash;
-      client.updatedAt = Date.now();
-      localStorage.setItem("crm_clients", JSON.stringify(clients));
-    }
   }
 }
 
@@ -805,7 +777,6 @@ const DOM = {
   
   // 포탈 영역
   clientLoginView: document.getElementById("client-login-view"),
-  clientSignupView: document.getElementById("client-signup-view"),
   clientSelectView: document.getElementById("client-select-view"),
   clientQuestionnaireView: document.getElementById("client-questionnaire-view"),
   clientSuccessView: document.getElementById("client-success-view"),
@@ -814,20 +785,9 @@ const DOM = {
   
   // 로그인 폼
   formClientLogin: document.getElementById("form-client-login"),
-  loginId: document.getElementById("login-id"),
-  loginPassword: document.getElementById("login-password"),
+  loginName: document.getElementById("login-name"),
+  loginBirth: document.getElementById("login-birth"),
   btnGotoAdmin: document.getElementById("btn-goto-admin"),
-
-  // 회원가입 폼
-  formClientSignup: document.getElementById("form-client-signup"),
-  signupId: document.getElementById("signup-id"),
-  signupPassword: document.getElementById("signup-password"),
-  signupPasswordConfirm: document.getElementById("signup-password-confirm"),
-  signupPwGuide: document.getElementById("signup-pw-guide"),
-  signupPwMatch: document.getElementById("signup-pw-match"),
-  signupName: document.getElementById("signup-name"),
-  signupPhone: document.getElementById("signup-phone"),
-  signupBirth: document.getElementById("signup-birth"),
   
   // 상담 선택 페이지
   currentClientDisplay: document.getElementById("current-client-display"),
@@ -962,7 +922,6 @@ const DOM = {
 // Hash mappings to view IDs
 const HASH_TO_VIEW = {
   "#/login": "client-login",
-  "#/signup": "client-signup",
   "#/select": "client-select",
   "#/questionnaire": "client-questionnaire",
   "#/success": "client-success",
@@ -974,7 +933,6 @@ const HASH_TO_VIEW = {
 
 const VIEW_TO_HASH = {
   "client-login": "#/login",
-  "client-signup": "#/signup",
   "client-select": "#/select",
   "client-questionnaire": "#/questionnaire",
   "client-success": "#/success",
@@ -996,7 +954,6 @@ function showView(viewId) {
 function renderView(viewId) {
   const views = [
     DOM.clientLoginView,
-    DOM.clientSignupView,
     DOM.clientSelectView,
     DOM.clientQuestionnaireView,
     DOM.clientSuccessView,
@@ -1009,22 +966,11 @@ function renderView(viewId) {
 
   if (viewId === "client-login") {
     if (DOM.clientLoginView) DOM.clientLoginView.classList.remove("hidden");
-    if (DOM.loginId) DOM.loginId.value = "";
-    if (DOM.loginPassword) DOM.loginPassword.value = "";
+    if (DOM.loginName) DOM.loginName.value = "";
+    if (DOM.loginBirth) DOM.loginBirth.value = "";
     currentClient = null;
     selectedCounselingType = null;
     sessionStorage.removeItem("crm_current_client");
-  } else if (viewId === "client-signup") {
-    if (DOM.clientSignupView) DOM.clientSignupView.classList.remove("hidden");
-    if (DOM.formClientSignup) DOM.formClientSignup.reset();
-    if (DOM.signupPwGuide) {
-      DOM.signupPwGuide.className = "font-body-sm text-xs text-on-surface-variant/70 mt-0.5";
-      DOM.signupPwGuide.textContent = "* 8자 이상이며 숫자를 1개 이상 포함해야 합니다.";
-    }
-    if (DOM.signupPwMatch) {
-      DOM.signupPwMatch.classList.add("hidden");
-      DOM.signupPwMatch.textContent = "";
-    }
   } else if (viewId === "client-select") {
     DOM.clientSelectView.classList.remove("hidden");
     DOM.currentClientDisplay.textContent = currentClient.name;
@@ -1269,165 +1215,35 @@ function formatPhoneInput(e) {
   e.target.value = val;
 }
 
-if (DOM.signupBirth) DOM.signupBirth.addEventListener("input", formatBirthInput);
+if (DOM.loginBirth) DOM.loginBirth.addEventListener("input", formatBirthInput);
 if (DOM.registerBirth) DOM.registerBirth.addEventListener("input", formatBirthInput);
-if (DOM.signupPhone) DOM.signupPhone.addEventListener("input", formatPhoneInput);
 if (DOM.registerPhone) DOM.registerPhone.addEventListener("input", formatPhoneInput);
 
-// 회원가입 비밀번호 실시간 유효성 및 일치 검사
-function checkSignupPasswordMatch() {
-  if (!DOM.signupPassword || !DOM.signupPasswordConfirm) return;
-  const pw = DOM.signupPassword.value;
-  const confirmPw = DOM.signupPasswordConfirm.value;
-
-  // 비밀번호 정책 검증 (8자 이상, 숫자 필수)
-  if (pw.length > 0) {
-    if (validatePassword(pw)) {
-      DOM.signupPwGuide.className = "font-body-sm text-xs text-green-600 font-medium mt-0.5";
-      DOM.signupPwGuide.textContent = "✓ 안전한 비밀번호입니다 (8자 이상, 숫자 포함).";
-    } else {
-      DOM.signupPwGuide.className = "font-body-sm text-xs text-error font-medium mt-0.5";
-      DOM.signupPwGuide.textContent = "✕ 8자 이상이며 숫자를 1개 이상 반드시 포함해야 합니다.";
-    }
-  } else {
-    DOM.signupPwGuide.className = "font-body-sm text-xs text-on-surface-variant/70 mt-0.5";
-    DOM.signupPwGuide.textContent = "* 8자 이상이며 숫자를 1개 이상 포함해야 합니다.";
-  }
-
-  // 비밀번호 일치 검증
-  if (confirmPw.length > 0) {
-    DOM.signupPwMatch.classList.remove("hidden");
-    if (pw === confirmPw) {
-      DOM.signupPwMatch.className = "font-body-sm text-xs text-green-600 font-medium mt-0.5";
-      DOM.signupPwMatch.textContent = "✓ 비밀번호가 일치합니다.";
-    } else {
-      DOM.signupPwMatch.className = "font-body-sm text-xs text-error font-medium mt-0.5";
-      DOM.signupPwMatch.textContent = "✕ 비밀번호가 일치하지 않습니다.";
-    }
-  } else {
-    DOM.signupPwMatch.classList.add("hidden");
-    DOM.signupPwMatch.textContent = "";
-  }
-}
-
-if (DOM.signupPassword) DOM.signupPassword.addEventListener("input", checkSignupPasswordMatch);
-if (DOM.signupPasswordConfirm) DOM.signupPasswordConfirm.addEventListener("input", checkSignupPasswordMatch);
-
-// 내담자 회원가입 처리 (기존 관리자 등록 데이터 스마트 매핑 포함)
-async function handleClientSignup(e) {
+// 손님 로그인 (성명 + 생년월일 8자리 인증)
+async function handleClientLogin(e) {
   if (e) e.preventDefault();
+  const name = DOM.loginName ? DOM.loginName.value.trim() : "";
+  const birth = DOM.loginBirth ? DOM.loginBirth.value.trim().replace(/\D/g, "") : "";
 
-  const id = DOM.signupId.value.trim();
-  const password = DOM.signupPassword.value;
-  const confirmPw = DOM.signupPasswordConfirm.value;
-  const name = DOM.signupName.value.trim();
-  const phone = DOM.signupPhone.value.trim();
-  const birth = DOM.signupBirth.value.trim().replace(/-/g, "");
-
-  // 1. 기본 유효성 검사
-  if (!id || id.length < 4) {
-    showToast("아이디는 4자 이상으로 입력해 주세요.", "error");
-    if (DOM.signupId) DOM.signupId.focus();
-    return;
-  }
-
-  if (!validatePassword(password)) {
-    showToast("비밀번호는 8자 이상이며 숫자를 1개 이상 포함해야 합니다.", "error");
-    if (DOM.signupPassword) DOM.signupPassword.focus();
-    return;
-  }
-
-  if (password !== confirmPw) {
-    showToast("비밀번호 확인이 일치하지 않습니다.", "error");
-    if (DOM.signupPasswordConfirm) DOM.signupPasswordConfirm.focus();
-    return;
-  }
-
-  if (!name) {
-    showToast("성함을 입력해 주세요.", "error");
-    if (DOM.signupName) DOM.signupName.focus();
-    return;
-  }
-
-  const cleanPhone = phone.replace(/\D/g, "");
-  if (cleanPhone.length < 10) {
-    showToast("전화번호를 올바르게 입력해 주세요 (예: 010-1234-5678).", "error");
-    if (DOM.signupPhone) DOM.signupPhone.focus();
+  if (!name || !birth) {
+    showToast("성명과 생년월일을 모두 입력해 주세요.", "error");
     return;
   }
 
   if (birth.length !== 8 || isNaN(birth)) {
     showToast("생년월일(8자리)을 올바르게 입력해 주세요 (예: 19900101).", "error");
-    if (DOM.signupBirth) DOM.signupBirth.focus();
+    if (DOM.loginBirth) DOM.loginBirth.focus();
     return;
   }
 
   const clients = await dbGetClients();
 
-  // 2. 아이디 중복 검사
-  const isDuplicateId = clients.some(c => c.username && c.username.toLowerCase() === id.toLowerCase());
-  if (isDuplicateId) {
-    showToast("이미 사용 중인 아이디입니다. 다른 아이디를 입력해 주세요.", "error");
-    if (DOM.signupId) DOM.signupId.focus();
-    return;
-  }
-
-  // 3. 비밀번호 SHA-256 암호화
-  const passwordHash = await hashPassword(password);
-
-  // 4. 스마트 매핑: 관리자가 사전에 등록해둔 내담자인지 (이름 + 생년월일 + 전화번호 일치) 확인
+  // 성명 및 생년월일 일치 회원 조회 (공백 및 하이픈 무시 매칭)
   const matchedClient = clients.find(c => {
+    const cName = (c.name || "").trim();
     const cBirth = (c.birthDate || "").replace(/\D/g, "");
-    const cPhone = (c.phone || "").replace(/\D/g, "");
-    return c.name === name && cBirth === birth && cPhone === cleanPhone;
+    return cName === name && cBirth === birth;
   });
-
-  if (matchedClient) {
-    // 기존 고객이 이미 다른 아이디로 가입되어 있는 경우 체크
-    if (matchedClient.username) {
-      showToast(`해당 정보로 이미 가입된 계정이 있습니다. (아이디: ${matchedClient.username})`, "error");
-      return;
-    }
-
-    // 기존 데이터에 새로 생성한 아이디 및 암호화된 비밀번호 연동/덮어쓰기
-    await dbUpdateClientAuth(matchedClient.id, id, passwordHash);
-    showToast(`기존 등록 정보와 연동되어 회원가입이 완료되었습니다!`, "success");
-  } else {
-    // 신규 내담자 생성
-    await dbAddClient(name, birth, phone, id, passwordHash);
-    showToast("회원가입이 성공적으로 완료되었습니다!", "success");
-  }
-
-  // 가입 완료 후 로그인 화면으로 전환 및 아이디 자동 채움
-  showView("client-login");
-  if (DOM.loginId) {
-    DOM.loginId.value = id;
-  }
-  if (DOM.loginPassword) {
-    DOM.loginPassword.focus();
-  }
-}
-
-// 손님 로그인 (아이디 + 비밀번호 SHA-256 인증)
-async function handleClientLogin(e) {
-  if (e) e.preventDefault();
-  const id = DOM.loginId.value.trim();
-  const password = DOM.loginPassword.value.trim();
-
-  if (!id || !password) {
-    showToast("아이디와 비밀번호를 모두 입력해 주세요.", "error");
-    return;
-  }
-
-  const passwordHash = await hashPassword(password);
-  const clients = await dbGetClients();
-
-  // 1. 아이디 및 비밀번호 해시 일치 회원 조회
-  const matchedClient = clients.find(c => 
-    c.username && 
-    c.username.toLowerCase() === id.toLowerCase() && 
-    c.passwordHash === passwordHash
-  );
 
   if (matchedClient) {
     currentClient = matchedClient;
@@ -1435,13 +1251,7 @@ async function handleClientLogin(e) {
     showToast(`${matchedClient.name}님, 환영합니다!`, "success");
     showView("client-select");
   } else {
-    // 안내: 혹시 아이디가 존재하는지 확인하여 친절한 힌트 제공
-    const idExists = clients.some(c => c.username && c.username.toLowerCase() === id.toLowerCase());
-    if (idExists) {
-      showToast("비밀번호가 일치하지 않습니다. 다시 확인해 주세요.", "error");
-    } else {
-      showToast("등록되지 않은 계정입니다. 회원가입 후 로그인해 주세요.", "error");
-    }
+    showToast("일치하는 내담자 정보를 찾을 수 없습니다. 관리자에게 등록된 정보(성명, 생년월일)를 확인해 주세요.", "error");
   }
 }
 
@@ -1458,50 +1268,53 @@ const iconMapping = {
   "청소년 진로 & 학습 상담": "school"
 };
 
-// 손님 상담 신청 카드 리스트 렌더링 (ON으로 활성화된 모든 상담 프로그램 노출)
+// 손님 상담 신청 카드 리스트 렌더링 (관리자가 해당 내담자에게 배정한 상담지만 노출)
 async function renderClientSelectCards() {
-  DOM.counselingGrid.innerHTML = `<div class="col-span-3 text-center text-on-surface-variant/50 py-10">상담 프로그램 목록을 불러오는 중...</div>`;
+  DOM.counselingGrid.innerHTML = `<div class="col-span-full text-center text-on-surface-variant/50 py-10">배정된 상담 목록을 불러오는 중...</div>`;
   DOM.btnClientSubmit.disabled = true;
 
   const records = await dbGetRecords();
-  const allActiveTypes = await dbGetCounselingTypes(true);
+  const allTypes = await dbGetCounselingTypes(false);
 
-  if (allActiveTypes.length === 0) {
-    DOM.counselingGrid.innerHTML = `<div class="col-span-3 text-center text-on-surface-variant/50 py-10">현재 활성화된 상담 프로그램이 없습니다.</div>`;
+  // 현재 내담자에게 배정된 모든 상담 기록 필터링
+  const clientRecords = records.filter(r => r.clientId === currentClient.id);
+
+  if (clientRecords.length === 0) {
+    DOM.counselingGrid.innerHTML = `
+      <div class="col-span-full flex flex-col items-center justify-center text-center py-16 px-6 bg-surface-container-low/40 rounded-3xl border border-outline-variant/20 max-w-2xl mx-auto w-full my-4">
+        <div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant/40 mb-4 shadow-sm">
+          <span class="material-symbols-outlined text-[36px]">assignment_late</span>
+        </div>
+        <h3 class="font-headline-sm text-headline-sm text-on-surface mb-2 font-semibold">배정된 상담 프로그램이 없습니다</h3>
+        <p class="font-body-md text-body-md text-on-surface-variant max-w-md leading-relaxed">
+          관리자가 내담자에게 상담 프로그램을 배정한 후 이곳에 표시됩니다.<br />
+          상담소 또는 담당 관리자에게 배정 요청을 문의해 주세요.
+        </p>
+      </div>
+    `;
     return;
   }
 
-  // 현재 내담자의 미완료/대기 중인 배정 기록이 있는지 확인
-  const clientPendingRecords = records.filter(r => 
-    r.clientId === currentClient.id && 
-    r.status === "Pending" && 
-    (!r.answers || r.answers.length === 0)
-  );
-
-  // 현재 내담자가 이미 작성을 완료한 기록 확인
-  const clientCompletedRecords = records.filter(r => 
-    r.clientId === currentClient.id && 
-    r.answers && r.answers.length > 0
-  );
-
   DOM.counselingGrid.innerHTML = "";
-  allActiveTypes.forEach(opt => {
-    // 관리자가 사전에 배정해둔 기록이 있는지 매칭
-    const matchedRecord = clientPendingRecords.find(r => r.counselingTypeId === opt.id);
-    const isAssigned = !!matchedRecord;
+  clientRecords.forEach(rec => {
+    // 배정된 상담 종류 메타데이터 탐색
+    const matchedType = allTypes.find(t => t.id === rec.counselingTypeId || t.title === rec.counselingTitle) || {
+      id: rec.counselingTypeId,
+      title: rec.counselingTitle,
+      description: "관리자가 배정한 맞춤 심리 상담 프로그램입니다.",
+      questions: []
+    };
 
-    // 이미 작성 완료된 기록이 있는지 확인
-    const completedRecord = clientCompletedRecords.find(r => r.counselingTypeId === opt.id);
-    const isCompleted = !!completedRecord;
+    const isCompleted = (rec.answers && rec.answers.length > 0) || rec.status === "Completed";
+    const icon = iconMapping[matchedType.title] || "spa";
 
     const card = document.createElement("div");
     card.className = `group relative p-6 rounded-2xl bg-surface-container-lowest border ${isCompleted ? 'border-emerald-200/80 bg-emerald-50/20' : 'border-outline-variant/30'} 
       shadow-[0_8px_32px_rgba(112,128,144,0.04)] hover:shadow-[0_16px_48px_rgba(112,128,144,0.12)]
       cursor-pointer transition-all duration-300 flex flex-col gap-4 overflow-hidden`;
-    card.dataset.id = opt.id;
-    card.dataset.title = opt.title;
-
-    const icon = iconMapping[opt.title] || "spa";
+    card.dataset.id = matchedType.id;
+    card.dataset.title = matchedType.title;
+    card.dataset.recordId = rec.id;
 
     card.innerHTML = `
       <div class="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
@@ -1512,7 +1325,7 @@ async function renderClientSelectCards() {
       </div>
 
       <div class="flex items-center justify-between">
-        <div class="w-12 h-12 rounded-xl ${isCompleted ? 'bg-emerald-100 text-emerald-700' : 'bg-secondary-container text-on-secondary-container'} flex items-center justify-center icon-container transition-colors duration-300">
+        <div class="w-12 h-12 rounded-xl ${isCompleted ? 'bg-emerald-100 text-emerald-700' : 'bg-primary-container text-on-primary-container'} flex items-center justify-center icon-container transition-colors duration-300">
           <span class="material-symbols-outlined text-[24px]">${icon}</span>
         </div>
         ${isCompleted ? `
@@ -1520,17 +1333,17 @@ async function renderClientSelectCards() {
             <span class="material-symbols-outlined text-[14px]">task_alt</span>
             작성 완료한 상담지
           </span>
-        ` : isAssigned ? `
+        ` : `
           <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200 mr-8">
             <span class="material-symbols-outlined text-[14px]">assignment_ind</span>
-            관리자가 배정한 상담
+            배정된 상담 (작성 대기)
           </span>
-        ` : ''}
+        `}
       </div>
 
       <div>
-        <h3 class="text-headline-sm font-headline-sm text-on-surface mb-1">${opt.title}</h3>
-        <p class="text-body-sm font-body-sm text-on-surface-variant line-clamp-2">${opt.description || '맞춤형 심리 상담 프로그램입니다.'}</p>
+        <h3 class="text-headline-sm font-headline-sm text-on-surface mb-1">${matchedType.title}</h3>
+        <p class="text-body-sm font-body-sm text-on-surface-variant line-clamp-2">${matchedType.description || '관리자가 배정한 맞춤 심리 상담 프로그램입니다.'}</p>
       </div>
     `;
 
@@ -1540,7 +1353,10 @@ async function renderClientSelectCards() {
         c.classList.remove("border-primary", "ring-2", "ring-primary/20", "bg-primary-container/10");
         c.querySelector(".check-circle").className = "absolute top-6 right-6 w-6 h-6 rounded-full border-2 border-outline-variant flex items-center justify-center transition-colors duration-200 check-circle";
         c.querySelector(".check-icon").className = "material-symbols-outlined text-[16px] text-white opacity-0 transform scale-50 transition-all duration-200 check-icon";
-        c.querySelector(".icon-container").className = "w-12 h-12 rounded-xl bg-secondary-container flex items-center justify-center icon-container transition-colors duration-300";
+        const cRecId = c.dataset.recordId;
+        const cRec = clientRecords.find(cr => cr.id === cRecId);
+        const isRecCompleted = cRec && ((cRec.answers && cRec.answers.length > 0) || cRec.status === "Completed");
+        c.querySelector(".icon-container").className = `w-12 h-12 rounded-xl ${isRecCompleted ? 'bg-emerald-100 text-emerald-700' : 'bg-primary-container text-on-primary-container'} flex items-center justify-center icon-container transition-colors duration-300`;
       });
 
       card.classList.add("border-primary", "ring-2", "ring-primary/20", "bg-primary-container/10");
@@ -1548,8 +1364,8 @@ async function renderClientSelectCards() {
       card.querySelector(".check-icon").className = "material-symbols-outlined text-[16px] text-white opacity-100 scale-100 transform transition-all duration-200 check-icon";
       card.querySelector(".icon-container").className = "w-12 h-12 rounded-xl bg-primary text-on-primary flex items-center justify-center icon-container transition-colors duration-300";
 
-      selectedCounselingType = opt;
-      currentRecordId = isAssigned ? matchedRecord.id : null;
+      selectedCounselingType = matchedType;
+      currentRecordId = rec.id;
       DOM.btnClientSubmit.disabled = false;
     });
 
@@ -2054,7 +1870,7 @@ async function renderClientDirectory() {
           </div>
           <div class="flex flex-col">
             <span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">${client.name}</span>
-            ${client.username ? `<span class="text-[11px] text-primary/80 font-normal">아이디: ${client.username}</span>` : '<span class="text-[10px] text-on-surface-variant/40">미가입(데스크등록)</span>'}
+            <span class="text-[11px] text-on-surface-variant/70 font-normal">등록 내담자</span>
           </div>
         </div>
       </td>
@@ -2623,9 +2439,6 @@ function registerEventListeners() {
 
   // 고객 로그인 버튼
   if (DOM.formClientLogin) DOM.formClientLogin.addEventListener("submit", handleClientLogin);
-
-  // 고객 회원가입 버튼
-  if (DOM.formClientSignup) DOM.formClientSignup.addEventListener("submit", handleClientSignup);
 
   // 답변 작성하기 (질문지 화면 진입)
   DOM.btnClientSubmit.addEventListener("click", () => {

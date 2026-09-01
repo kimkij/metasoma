@@ -4,12 +4,13 @@
 // 설정하지 않으면 자동으로 브라우저 내의 로컬 저장소(LocalStorage) 모드로 동작합니다.
 // ============================================================================
 const firebaseConfig = {
-  apiKey: "AIzaSyAsk326xyAatoOOyDRvnqYqvruQ5eYj85k",
-  authDomain: "kimijcrm.firebaseapp.com",
-  projectId: "kimijcrm",
-  storageBucket: "kimijcrm.firebasestorage.app",
-  messagingSenderId: "514087280756",
-  appId: "1:514087280756:web:be4003845787118f783121"
+  apiKey: "AIzaSyAg1EkDJF1shMd9h0DQNLigJMdh4yy-ir4",
+  authDomain: "metasomacrm.firebaseapp.com",
+  projectId: "metasomacrm",
+  storageBucket: "metasomacrm.firebasestorage.app",
+  messagingSenderId: "165386269255",
+  appId: "1:165386269255:web:c89a5432aa446eadc6f762",
+  measurementId: "G-0C5LMGKD50"
 };
 
 // 전역 변수로 데이터베이스 연결 제어 (CORS 및 로컬 파일 직접 열기 차단 방지)

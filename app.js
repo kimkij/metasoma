@@ -1272,6 +1272,8 @@ const iconMapping = {
 async function renderClientSelectCards() {
   DOM.counselingGrid.innerHTML = `<div class="col-span-full text-center text-on-surface-variant/50 py-10">배정된 상담 목록을 불러오는 중...</div>`;
   DOM.btnClientSubmit.disabled = true;
+  selectedCounselingType = null;
+  currentRecordId = null;
 
   const records = await dbGetRecords();
   const allTypes = await dbGetCounselingTypes(false);
@@ -1309,65 +1311,96 @@ async function renderClientSelectCards() {
     const icon = iconMapping[matchedType.title] || "spa";
 
     const card = document.createElement("div");
-    card.className = `group relative p-6 rounded-2xl bg-surface-container-lowest border ${isCompleted ? 'border-emerald-200/80 bg-emerald-50/20' : 'border-outline-variant/30'} 
-      shadow-[0_8px_32px_rgba(112,128,144,0.04)] hover:shadow-[0_16px_48px_rgba(112,128,144,0.12)]
-      cursor-pointer transition-all duration-300 flex flex-col gap-4 overflow-hidden`;
-    card.dataset.id = matchedType.id;
-    card.dataset.title = matchedType.title;
-    card.dataset.recordId = rec.id;
+    
+    if (isCompleted) {
+      // 작성 완료된 상담지: 비활성화 스타일 적용
+      card.className = `group relative p-6 rounded-2xl bg-surface-container-low/60 border border-emerald-200/80 
+        shadow-none cursor-not-allowed opacity-75 flex flex-col gap-4 overflow-hidden select-none`;
+      card.dataset.id = matchedType.id;
+      card.dataset.title = matchedType.title;
+      card.dataset.recordId = rec.id;
+      card.dataset.completed = "true";
 
-    card.innerHTML = `
-      <div class="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-      
-      <!-- 체크 표시 원 -->
-      <div class="absolute top-6 right-6 w-6 h-6 rounded-full border-2 border-outline-variant flex items-center justify-center transition-colors duration-200 check-circle">
-        <span class="material-symbols-outlined text-[16px] text-white opacity-0 transform scale-50 transition-all duration-200 check-icon">check</span>
-      </div>
-
-      <div class="flex items-center justify-between">
-        <div class="w-12 h-12 rounded-xl ${isCompleted ? 'bg-emerald-100 text-emerald-700' : 'bg-primary-container text-on-primary-container'} flex items-center justify-center icon-container transition-colors duration-300">
-          <span class="material-symbols-outlined text-[24px]">${icon}</span>
-        </div>
-        ${isCompleted ? `
-          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200 mr-8">
+      card.innerHTML = `
+        <div class="flex items-center justify-between">
+          <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center icon-container">
+            <span class="material-symbols-outlined text-[24px]">${icon}</span>
+          </div>
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
             <span class="material-symbols-outlined text-[14px]">task_alt</span>
-            작성 완료한 상담지
+            작성 완료 (제출 완료)
           </span>
-        ` : `
+        </div>
+
+        <div>
+          <h3 class="text-headline-sm font-headline-sm text-on-surface mb-1">${matchedType.title}</h3>
+          <p class="text-body-sm font-body-sm text-on-surface-variant line-clamp-2">${matchedType.description || '관리자가 배정한 맞춤 심리 상담 프로그램입니다.'}</p>
+          <div class="mt-3 flex items-center gap-1 text-xs text-emerald-700 font-medium">
+            <span class="material-symbols-outlined text-[14px]">check_circle</span>
+            <span>답변 제출이 완료되어 추가 작성이 불가합니다.</span>
+          </div>
+        </div>
+      `;
+
+      card.addEventListener("click", () => {
+        showToast("이미 작성이 완료된 상담지입니다.", "info");
+      });
+    } else {
+      // 작성 대기 중인 상담지: 활성화 및 선택 가능
+      card.className = `group relative p-6 rounded-2xl bg-surface-container-lowest border border-outline-variant/30 
+        shadow-[0_8px_32px_rgba(112,128,144,0.04)] hover:shadow-[0_16px_48px_rgba(112,128,144,0.12)]
+        cursor-pointer transition-all duration-300 flex flex-col gap-4 overflow-hidden`;
+      card.dataset.id = matchedType.id;
+      card.dataset.title = matchedType.title;
+      card.dataset.recordId = rec.id;
+      card.dataset.completed = "false";
+
+      card.innerHTML = `
+        <div class="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+        
+        <!-- 체크 표시 원 -->
+        <div class="absolute top-6 right-6 w-6 h-6 rounded-full border-2 border-outline-variant flex items-center justify-center transition-colors duration-200 check-circle">
+          <span class="material-symbols-outlined text-[16px] text-white opacity-0 transform scale-50 transition-all duration-200 check-icon">check</span>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div class="w-12 h-12 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center icon-container transition-colors duration-300">
+            <span class="material-symbols-outlined text-[24px]">${icon}</span>
+          </div>
           <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200 mr-8">
             <span class="material-symbols-outlined text-[14px]">assignment_ind</span>
             배정된 상담 (작성 대기)
           </span>
-        `}
-      </div>
+        </div>
 
-      <div>
-        <h3 class="text-headline-sm font-headline-sm text-on-surface mb-1">${matchedType.title}</h3>
-        <p class="text-body-sm font-body-sm text-on-surface-variant line-clamp-2">${matchedType.description || '관리자가 배정한 맞춤 심리 상담 프로그램입니다.'}</p>
-      </div>
-    `;
+        <div>
+          <h3 class="text-headline-sm font-headline-sm text-on-surface mb-1">${matchedType.title}</h3>
+          <p class="text-body-sm font-body-sm text-on-surface-variant line-clamp-2">${matchedType.description || '관리자가 배정한 맞춤 심리 상담 프로그램입니다.'}</p>
+        </div>
+      `;
 
-    card.addEventListener("click", () => {
-      // 선택 시 하이라이트 토글 (단일 선택)
-      document.querySelectorAll("#counseling-grid .group").forEach(c => {
-        c.classList.remove("border-primary", "ring-2", "ring-primary/20", "bg-primary-container/10");
-        c.querySelector(".check-circle").className = "absolute top-6 right-6 w-6 h-6 rounded-full border-2 border-outline-variant flex items-center justify-center transition-colors duration-200 check-circle";
-        c.querySelector(".check-icon").className = "material-symbols-outlined text-[16px] text-white opacity-0 transform scale-50 transition-all duration-200 check-icon";
-        const cRecId = c.dataset.recordId;
-        const cRec = clientRecords.find(cr => cr.id === cRecId);
-        const isRecCompleted = cRec && ((cRec.answers && cRec.answers.length > 0) || cRec.status === "Completed");
-        c.querySelector(".icon-container").className = `w-12 h-12 rounded-xl ${isRecCompleted ? 'bg-emerald-100 text-emerald-700' : 'bg-primary-container text-on-primary-container'} flex items-center justify-center icon-container transition-colors duration-300`;
+      card.addEventListener("click", () => {
+        // 선택 시 하이라이트 토글 (활성 카드들만)
+        document.querySelectorAll("#counseling-grid .group[data-completed='false']").forEach(c => {
+          c.classList.remove("border-primary", "ring-2", "ring-primary/20", "bg-primary-container/10");
+          const circle = c.querySelector(".check-circle");
+          if (circle) circle.className = "absolute top-6 right-6 w-6 h-6 rounded-full border-2 border-outline-variant flex items-center justify-center transition-colors duration-200 check-circle";
+          const iconEl = c.querySelector(".check-icon");
+          if (iconEl) iconEl.className = "material-symbols-outlined text-[16px] text-white opacity-0 transform scale-50 transition-all duration-200 check-icon";
+          const iconCont = c.querySelector(".icon-container");
+          if (iconCont) iconCont.className = "w-12 h-12 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center icon-container transition-colors duration-300";
+        });
+
+        card.classList.add("border-primary", "ring-2", "ring-primary/20", "bg-primary-container/10");
+        card.querySelector(".check-circle").className = "absolute top-6 right-6 w-6 h-6 rounded-full border-2 border-primary bg-primary flex items-center justify-center transition-colors duration-200 check-circle";
+        card.querySelector(".check-icon").className = "material-symbols-outlined text-[16px] text-white opacity-100 scale-100 transform transition-all duration-200 check-icon";
+        card.querySelector(".icon-container").className = "w-12 h-12 rounded-xl bg-primary text-on-primary flex items-center justify-center icon-container transition-colors duration-300";
+
+        selectedCounselingType = matchedType;
+        currentRecordId = rec.id;
+        DOM.btnClientSubmit.disabled = false;
       });
-
-      card.classList.add("border-primary", "ring-2", "ring-primary/20", "bg-primary-container/10");
-      card.querySelector(".check-circle").className = "absolute top-6 right-6 w-6 h-6 rounded-full border-2 border-primary bg-primary flex items-center justify-center transition-colors duration-200 check-circle";
-      card.querySelector(".check-icon").className = "material-symbols-outlined text-[16px] text-white opacity-100 scale-100 transform transition-all duration-200 check-icon";
-      card.querySelector(".icon-container").className = "w-12 h-12 rounded-xl bg-primary text-on-primary flex items-center justify-center icon-container transition-colors duration-300";
-
-      selectedCounselingType = matchedType;
-      currentRecordId = rec.id;
-      DOM.btnClientSubmit.disabled = false;
-    });
+    }
 
     DOM.counselingGrid.appendChild(card);
   });

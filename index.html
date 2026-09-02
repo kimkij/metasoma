@@ -228,10 +228,62 @@
           </div>
         </div>
 
-        <!-- 오른쪽: 일정 안내 이미지 (가로 최대 600px, 비율 유지) -->
-        <div class="w-full max-w-[600px] flex items-center justify-center">
-          <div class="w-full bg-surface-container-lowest/85 backdrop-blur-md rounded-3xl p-3 md:p-4 shadow-md border border-outline-variant/30 overflow-hidden flex flex-col items-center">
-            <img src="schedule.png" alt="상담 일정 안내" class="w-full max-w-[600px] h-auto object-contain rounded-2xl shadow-sm" />
+        <!-- 오른쪽: 2개월 상담 예약 달력 영역 (가로 최대 600px) -->
+        <div class="w-full max-w-[600px] flex flex-col items-center justify-center">
+          <div class="w-full bg-surface-container-lowest/90 backdrop-blur-md rounded-3xl p-5 md:p-6 shadow-md border border-outline-variant/30 overflow-hidden flex flex-col">
+            <!-- 달력 상단 헤더 -->
+            <div class="flex items-center justify-between mb-3 pb-3 border-b border-outline-variant/20">
+              <div>
+                <h2 class="text-headline-md font-headline-md text-on-surface flex items-center gap-2">
+                  <span class="material-symbols-outlined text-primary text-[24px]">calendar_month</span>
+                  상담 예약 신청
+                </h2>
+                <p class="text-body-sm text-xs text-on-surface-variant mt-0.5">원하는 일시를 선택해 예약해주세요. 확인 전화 후 예약이 확정됩니다.</p>
+              </div>
+              <div class="flex items-center gap-1.5 bg-surface-container-low px-2 py-1 rounded-xl border border-outline-variant/30">
+                <button type="button" id="cal-prev-btn" class="p-1 rounded-lg hover:bg-surface-container-high transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-on-surface">
+                  <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+                </button>
+                <span id="cal-month-title" class="font-bold text-on-surface text-sm min-w-[84px] text-center">2026년 10월</span>
+                <button type="button" id="cal-next-btn" class="p-1 rounded-lg hover:bg-surface-container-high transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-on-surface">
+                  <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 요일 표시 (일 ~ 토) -->
+            <div class="grid grid-cols-7 gap-1 text-center font-bold text-xs text-on-surface-variant mb-2">
+              <div class="text-red-500 py-1">일</div>
+              <div class="text-gray-400 py-1">월(휴)</div>
+              <div class="text-on-surface py-1">화</div>
+              <div class="text-on-surface py-1">수</div>
+              <div class="text-on-surface py-1">목</div>
+              <div class="text-on-surface py-1">금</div>
+              <div class="text-blue-500 py-1">토</div>
+            </div>
+
+            <!-- 일자 그리드 -->
+            <div id="cal-days-grid" class="grid grid-cols-7 gap-1 mb-4">
+              <!-- JS 동적 생성 -->
+            </div>
+
+            <!-- 시간 슬롯 선택 섹션 -->
+            <div class="border-t border-outline-variant/20 pt-3">
+              <div class="flex items-center justify-between mb-2.5">
+                <span class="font-bold text-xs md:text-sm text-on-surface flex items-center gap-1.5">
+                  <span class="w-2.5 h-2.5 rounded-full bg-primary inline-block"></span>
+                  <span id="cal-selected-date-text">날짜를 선택해 주세요</span>
+                </span>
+                <div class="flex items-center gap-2.5 text-[11px] text-on-surface-variant font-medium">
+                  <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-emerald-500 inline-block"></span>예약가능</span>
+                  <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-red-500 inline-block"></span>예약완료</span>
+                  <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-gray-300 inline-block"></span>휴무</span>
+                </div>
+              </div>
+              <div id="cal-time-slots-container" class="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-[175px] overflow-y-auto pr-1">
+                <!-- 시간 슬롯 버튼 동적 생성 -->
+              </div>
+            </div>
           </div>
         </div>
       </main>
@@ -539,10 +591,20 @@
             <span class="material-symbols-outlined mr-md text-[22px]">group</span>
             <span class="font-label-md text-label-md">내담자 리스트</span>
           </button>
+          <button id="nav-reservations"
+            class="w-full flex items-center px-md py-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high/50 hover:text-on-surface transition-all group">
+            <span class="material-symbols-outlined mr-md text-[22px]">calendar_month</span>
+            <span class="font-label-md text-label-md">예약 관리</span>
+          </button>
           <button id="nav-counseling"
             class="w-full flex items-center px-md py-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high/50 hover:text-on-surface transition-all group">
             <span class="material-symbols-outlined mr-md text-[22px]">event_note</span>
             <span class="font-label-md text-label-md">상담지 관리</span>
+          </button>
+          <button id="nav-telegram"
+            class="w-full flex items-center px-md py-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high/50 hover:text-on-surface transition-all group">
+            <span class="material-symbols-outlined mr-md text-[22px]">send</span>
+            <span class="font-label-md text-label-md">텔레그램 알림</span>
           </button>
         </nav>
         <div class="px-md mt-auto space-y-xs">
@@ -629,14 +691,42 @@
 
             <!-- 테이블 카드 컨테이너 -->
             <div class="bg-surface-container-lowest rounded-2xl shadow-sm overflow-hidden flex flex-col">
-              <div
-                class="p-md flex items-center justify-between bg-surface-container-lowest border-b border-surface-container-high relative z-10">
-                <div
-                  class="flex items-center gap-sm bg-surface-container-low rounded-full px-sm py-xs w-96 transition-all focus-within:ring-2 focus-within:ring-primary/30">
-                  <span class="material-symbols-outlined text-on-surface-variant ml-xs">search</span>
-                  <input id="search-client"
-                    class="bg-transparent border-none focus:ring-0 font-body-sm text-body-sm text-on-surface w-full placeholder:text-on-surface-variant/60"
-                    placeholder="성함 또는 생년월일 검색..." type="text">
+              <div class="p-md flex items-center justify-between gap-3 bg-surface-container-lowest border-b border-surface-container-high relative z-10 overflow-x-auto">
+                <div class="flex items-center gap-2 shrink-0">
+                  <!-- 기간 검색 (2회 클릭: 시작일 -> 종료일 달력 모달 연동) -->
+                  <div class="flex items-center gap-2">
+                    <span class="text-on-surface-variant font-medium text-[13px] flex items-center gap-1 shrink-0">
+                      <span class="material-symbols-outlined text-[16px]">calendar_today</span>
+                      등록일 기간:
+                    </span>
+                    <button type="button" id="btn-open-client-daterange" class="h-[38px] flex items-center gap-2 bg-surface-container-low hover:bg-surface-container border border-outline-variant/30 rounded-full px-3 text-on-surface text-[13px] font-medium transition-all cursor-pointer shadow-none focus:outline-none focus:ring-2 focus:ring-primary/20">
+                      <span class="material-symbols-outlined text-primary text-[18px]">date_range</span>
+                      <span id="client-daterange-label">전체 기간</span>
+                      <span class="material-symbols-outlined text-on-surface-variant text-[18px]">expand_more</span>
+                    </button>
+                    <button type="button" id="btn-client-date-reset" title="기간 초기화" class="w-[38px] h-[38px] flex items-center justify-center rounded-full bg-surface-container-low hover:bg-surface-container border border-outline-variant/30 text-on-surface-variant hover:text-on-surface transition-all cursor-pointer shadow-none">
+                      <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+                    </button>
+                  </div>
+
+                  <!-- 성함 또는 연락처 검색 -->
+                  <div class="h-[38px] flex items-center gap-2 bg-surface-container-low border border-outline-variant/30 rounded-full px-3.5 w-56 transition-all focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20">
+                    <span class="material-symbols-outlined text-on-surface-variant text-[18px] shrink-0">search</span>
+                    <input id="search-client"
+                      class="bg-transparent border-none focus:ring-0 text-[13px] text-on-surface w-full p-0 leading-normal placeholder:text-on-surface-variant/60 placeholder:text-[13px]"
+                      placeholder="성함 또는 연락처 검색..." type="text">
+                  </div>
+
+                  <!-- N개씩 보기 드롭다운 -->
+                  <div class="relative h-[38px]">
+                    <select id="client-page-size" class="h-[38px] pl-3.5 pr-8 bg-surface-container-low hover:bg-surface-container border border-outline-variant/30 text-on-surface text-[13px] font-medium rounded-full cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none">
+                      <option value="10">10개씩 보기</option>
+                      <option value="20" selected>20개씩 보기</option>
+                      <option value="50">50개씩 보기</option>
+                      <option value="100">100개씩 보기</option>
+                    </select>
+                    <span class="material-symbols-outlined text-on-surface-variant text-[18px] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">expand_more</span>
+                  </div>
                 </div>
               </div>
               <div class="overflow-visible">
@@ -661,7 +751,136 @@
             </div>
           </div>
 
-          <!-- [Tab 2] 심리상담 종류 관리 (design/_4/code.html) -->
+          <!-- [Tab 2] 상담 예약 관리 -->
+          <div id="tab-reservations" class="hidden flex flex-col w-full h-full pb-xl">
+            <div class="flex items-center justify-between mb-lg">
+              <div>
+                <h1 class="font-headline-lg text-headline-lg text-on-surface mb-xs">상담 예약 관리</h1>
+                <p class="font-body-md text-body-md text-on-surface-variant">내담자가 온라인으로 신청한 상담 예약 일정을 확인하고 확정 또는 취소합니다.</p>
+              </div>
+              <button id="btn-refresh-reservations" class="flex items-center gap-1.5 bg-surface-container-lowest hover:bg-surface-container text-on-surface px-md py-sm rounded-full transition-all border border-outline-variant/40 text-label-md font-label-md shadow-sm cursor-pointer">
+                <span class="material-symbols-outlined text-[18px]">refresh</span>
+                <span>새로고침</span>
+              </button>
+            </div>
+
+            <!-- 예약 대시보드 통계 카드 -->
+            <div class="grid grid-cols-4 gap-md mb-lg bg-surface-container-low p-md rounded-2xl shadow-sm">
+              <div class="bg-white p-sm rounded-xl flex items-center gap-md">
+                <div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold">
+                  📅
+                </div>
+                <div>
+                  <div id="stat-total-reservations" class="text-headline-sm font-bold text-on-surface">0</div>
+                  <div class="text-label-sm text-on-surface-variant">총 예약 신청</div>
+                </div>
+              </div>
+              <div class="bg-white p-sm rounded-xl flex items-center gap-md">
+                <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
+                  ⏳
+                </div>
+                <div>
+                  <div id="stat-pending-reservations" class="text-headline-sm font-bold text-on-surface">0</div>
+                  <div class="text-label-sm text-on-surface-variant">신청 대기</div>
+                </div>
+              </div>
+              <div class="bg-white p-sm rounded-xl flex items-center gap-md">
+                <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                  ✅
+                </div>
+                <div>
+                  <div id="stat-confirmed-reservations" class="text-headline-sm font-bold text-on-surface">0</div>
+                  <div class="text-label-sm text-on-surface-variant">예약 확정</div>
+                </div>
+              </div>
+              <div class="bg-white p-sm rounded-xl flex items-center gap-md">
+                <div class="w-10 h-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-bold">
+                  ❌
+                </div>
+                <div>
+                  <div id="stat-cancelled-reservations" class="text-headline-sm font-bold text-on-surface">0</div>
+                  <div class="text-label-sm text-on-surface-variant">취소됨</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 필터 및 기간/텍스트 검색 바 -->
+            <div class="bg-surface-container-lowest p-md rounded-2xl border border-surface-container-high shadow-sm mb-md flex items-center justify-between gap-3 overflow-x-auto">
+              <!-- 좌측: 기간 검색 & 텍스트 검색 & N개씩 보기 -->
+              <div class="flex items-center gap-2 shrink-0">
+                <div class="flex items-center gap-2">
+                  <span class="text-on-surface-variant font-medium text-[13px] flex items-center gap-1 shrink-0">
+                    <span class="material-symbols-outlined text-[16px]">calendar_today</span>
+                    예약일 기간:
+                  </span>
+                  <button type="button" id="btn-open-res-daterange" class="h-[38px] flex items-center gap-2 bg-surface-container-low hover:bg-surface-container border border-outline-variant/30 rounded-full px-3 text-on-surface text-[13px] font-medium transition-all cursor-pointer shadow-none focus:outline-none focus:ring-2 focus:ring-primary/20">
+                    <span class="material-symbols-outlined text-primary text-[18px]">date_range</span>
+                    <span id="res-daterange-label">전체 기간</span>
+                    <span class="material-symbols-outlined text-on-surface-variant text-[18px]">expand_more</span>
+                  </button>
+                  <button type="button" id="btn-res-date-reset" title="기간 초기화" class="w-[38px] h-[38px] flex items-center justify-center rounded-full bg-surface-container-low hover:bg-surface-container border border-outline-variant/30 text-on-surface-variant hover:text-on-surface transition-all cursor-pointer shadow-none">
+                    <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+                  </button>
+                </div>
+
+                <div class="h-[38px] flex items-center gap-2 bg-surface-container-low border border-outline-variant/30 rounded-full px-3.5 w-56 transition-all focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20">
+                  <span class="material-symbols-outlined text-on-surface-variant text-[18px] shrink-0">search</span>
+                  <input id="search-reservation" type="text" placeholder="성함 또는 연락처 검색..." class="bg-transparent border-none focus:ring-0 text-[13px] text-on-surface w-full p-0 leading-normal placeholder:text-on-surface-variant/60 placeholder:text-[13px]">
+                </div>
+
+                <!-- N개씩 보기 드롭다운 -->
+                <div class="relative h-[38px]">
+                  <select id="res-page-size" class="h-[38px] pl-3.5 pr-8 bg-surface-container-low hover:bg-surface-container border border-outline-variant/30 text-on-surface text-[13px] font-medium rounded-full cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none">
+                    <option value="10">10개씩 보기</option>
+                    <option value="20" selected>20개씩 보기</option>
+                    <option value="50">50개씩 보기</option>
+                    <option value="100">100개씩 보기</option>
+                  </select>
+                  <span class="material-symbols-outlined text-on-surface-variant text-[18px] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">expand_more</span>
+                </div>
+              </div>
+
+              <!-- 우측: 상태 필터 탭 (전체보기 ~ 취소됨) -->
+              <div class="flex items-center gap-1.5 shrink-0">
+                <button type="button" class="res-filter-btn h-[38px] px-3.5 rounded-full text-[13px] font-semibold bg-primary text-on-primary transition-all cursor-pointer shadow-sm" data-status="all">전체보기</button>
+                <button type="button" class="res-filter-btn h-[38px] px-3.5 rounded-full text-[13px] font-semibold bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-all cursor-pointer" data-status="Pending">신청 대기</button>
+                <button type="button" class="res-filter-btn h-[38px] px-3.5 rounded-full text-[13px] font-semibold bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-all cursor-pointer" data-status="Confirmed">예약 확정</button>
+                <button type="button" class="res-filter-btn h-[38px] px-3.5 rounded-full text-[13px] font-semibold bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-all cursor-pointer" data-status="Cancelled">취소됨</button>
+              </div>
+            </div>
+
+            <!-- 예약 리스트 테이블 -->
+            <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 overflow-hidden shadow-sm">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-outline-variant/20 bg-surface-container-low text-on-surface-variant text-xs font-semibold select-none">
+                    <th id="th-sort-res-datetime" class="py-3 px-4 cursor-pointer hover:bg-surface-container-high transition-colors group">
+                      <div class="flex items-center gap-1">
+                        <span>예약 일시</span>
+                        <span id="icon-sort-res-datetime" class="material-symbols-outlined text-[16px] text-primary">arrow_downward</span>
+                      </div>
+                    </th>
+                    <th class="py-3 px-4">예약자 성명</th>
+                    <th class="py-3 px-4">생년월일</th>
+                    <th class="py-3 px-4">연락처</th>
+                    <th id="th-sort-res-created" class="py-3 px-4 cursor-pointer hover:bg-surface-container-high transition-colors group">
+                      <div class="flex items-center gap-1">
+                        <span>신청 일시</span>
+                        <span id="icon-sort-res-created" class="material-symbols-outlined text-[16px] text-on-surface-variant/40 group-hover:text-on-surface-variant">unfold_more</span>
+                      </div>
+                    </th>
+                    <th class="py-3 px-4 text-left">예약 상태</th>
+                    <th class="py-3 px-4 text-left">상태 관리</th>
+                  </tr>
+                </thead>
+                <tbody id="reservation-list-tbody" class="divide-y divide-outline-variant/10 text-sm">
+                  <!-- 동적 렌더링 -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- [Tab 3] 심리상담 종류 관리 (design/_4/code.html) -->
           <div id="tab-counseling" class="hidden flex flex-col w-full relative min-h-[calc(100vh-80px)]">
             <div class="flex items-end justify-between mb-xl">
               <div class="flex flex-col gap-sm">
@@ -687,7 +906,96 @@
             </div>
           </div>
 
-          <!-- [Tab 3] 관리자 계정 관리 -->
+          <!-- [Tab 4] 텔레그램 알림 관리 -->
+          <div id="tab-telegram" class="hidden flex flex-col w-full h-full pb-xl">
+            <div class="flex items-center justify-between mb-lg">
+              <div>
+                <h1 class="font-headline-lg text-headline-lg text-on-surface mb-xs">텔레그램 알림 관리</h1>
+                <p class="font-body-md text-body-md text-on-surface-variant">신규 상담 예약 신청 시 실시간으로 알림을 수신할 텔레그램 설정을 관리합니다.</p>
+              </div>
+            </div>
+
+            <!-- 텔레그램 연동 설정 카드 -->
+            <div class="bg-surface-container-lowest p-xl rounded-2xl border border-surface-container-high shadow-sm max-w-4xl space-y-lg">
+              <!-- 헤더 & 상태 -->
+              <div class="flex items-start justify-between pb-md border-b border-surface-container-high">
+                <div class="flex items-center gap-4">
+                  <div class="w-14 h-14 rounded-2xl bg-[#E0ECDB] text-primary flex items-center justify-center font-bold flex-shrink-0 shadow-inner">
+                    <span class="material-symbols-outlined text-[32px]">send</span>
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <h2 class="text-headline-md font-bold text-on-surface">텔레그램 봇 실시간 알림 연동</h2>
+                      <span id="telegram-status-badge" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">연동 활성</span>
+                    </div>
+                    <p class="text-xs text-on-surface-variant mt-1">
+                      봇 이름: <span class="font-bold text-on-surface">metasoma_reservation</span> (<span class="text-primary font-mono font-semibold">@metasoma_bot</span>)
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Chat ID 설정 폼 -->
+              <div class="space-y-sm">
+                <label class="block font-label-md text-label-md font-semibold text-on-surface" for="setting-telegram-chat-id">
+                  알림 수신 텔레그램 Chat ID (개인 ID 또는 단체 그룹방 ID)
+                </label>
+                <div class="flex flex-wrap items-center gap-3">
+                  <input id="setting-telegram-chat-id" type="text" placeholder="Chat ID 입력 (예: 5318116202 또는 -1001234567890)"
+                    class="px-4 py-2.5 text-sm bg-surface-container-low border border-outline-variant/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/40 flex-1 max-w-md text-on-surface font-mono" />
+                  <button id="btn-save-telegram-chat-id" class="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[18px]">save</span>
+                    <span>저장</span>
+                  </button>
+                  <button id="btn-delete-telegram-chat-id" class="px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[18px]">delete</span>
+                    <span>삭제/연동해제</span>
+                  </button>
+                  <button id="btn-test-telegram-send" class="px-4 py-2.5 bg-surface-container hover:bg-surface-container-high text-on-surface border border-outline-variant/40 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-primary text-[18px]">notifications_active</span>
+                    <span>테스트 전송</span>
+                  </button>
+                </div>
+                <p class="text-xs text-on-surface-variant/70">
+                  ※ 설정을 저장하시면 내담자가 홈페이지에서 상담 예약을 신청할 때마다 위 ID로 예약자 정보가 실시간 전송됩니다.
+                </p>
+              </div>
+
+              <!-- 안내 가이드 박스 -->
+              <div class="bg-surface-container-low/70 p-lg rounded-xl border border-outline-variant/20 space-y-md text-xs text-on-surface-variant">
+                <h3 class="font-bold text-sm text-on-surface flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-primary text-[18px]">info</span>
+                  텔레그램 알림 수신 설정 가이드
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="bg-white p-md rounded-lg border border-outline-variant/20 space-y-1.5">
+                    <div class="font-bold text-on-surface text-xs flex items-center gap-1">
+                      <span>👤</span> 1. 담당자 개인 계정으로 받을 때
+                    </div>
+                    <ol class="list-decimal list-inside space-y-1 text-on-surface-variant/80 pl-1">
+                      <li>텔레그램에서 <b class="text-primary font-mono">@metasoma_bot</b> 검색</li>
+                      <li>하단의 <b>[시작]</b> (<code class="bg-gray-100 px-1 rounded">/start</code>) 클릭</li>
+                      <li>본인의 Chat ID를 입력하고 <b>[저장]</b> 클릭</li>
+                    </ol>
+                  </div>
+
+                  <div class="bg-white p-md rounded-lg border border-outline-variant/20 space-y-1.5">
+                    <div class="font-bold text-on-surface text-xs flex items-center gap-1">
+                      <span>👥</span> 2. 상담사 단체방(그룹방)으로 받을 때
+                    </div>
+                    <ol class="list-decimal list-inside space-y-1 text-on-surface-variant/80 pl-1">
+                      <li>상담사 선생님들이 모인 텔레그램 그룹방 생성</li>
+                      <li>그룹방 멤버로 <b class="text-primary font-mono">@metasoma_bot</b> 초대</li>
+                      <li>그룹방의 Group ID(예: <code class="bg-gray-100 px-1 rounded">-100...</code>) 입력 후 <b>[저장]</b></li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- [Tab 5] 관리자 계정 관리 -->
           <div id="tab-managers" class="hidden flex flex-col w-full h-full pb-xl">
             <div class="flex items-center justify-between mb-lg">
               <div>
@@ -1219,6 +1527,121 @@
       </div>
     </div>
 
+    <!-- 5) 상담 예약 신청 모달 -->
+    <div class="fixed inset-0 z-[90] hidden flex items-center justify-center p-md" id="reservation-modal">
+      <div class="absolute inset-0 bg-inverse-surface/40 backdrop-blur-sm" id="reservation-modal-overlay"></div>
+      <div class="bg-surface-container-lowest rounded-3xl shadow-xl w-full max-w-md relative z-10 overflow-hidden flex flex-col max-h-[90vh] border border-outline-variant/30">
+        <div class="p-lg bg-[#E0ECDB] text-on-surface flex justify-between items-center shrink-0 border-b border-outline-variant/20">
+          <div>
+            <span class="text-xs font-bold text-primary tracking-wide">상담 예약 신청</span>
+            <h2 class="font-headline-sm text-headline-sm font-bold text-on-surface mt-0.5" id="res-modal-datetime-display">2026-10-03 (토) 12:00</h2>
+          </div>
+          <button type="button" class="p-xs rounded-full hover:bg-black/5 text-on-surface-variant transition-colors" id="btn-close-res-modal">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <form id="form-reservation" onsubmit="return false;">
+          <div class="p-lg overflow-y-auto space-y-md">
+            <div>
+              <label class="block font-label-sm text-label-sm text-on-surface-variant mb-xs" for="res-input-name">예약자 성명</label>
+              <input id="res-input-name" class="w-full bg-surface-container-low border border-surface-container-high rounded-xl px-md py-sm font-body-md text-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-on-surface" type="text" placeholder="성함을 입력하세요 (예: 홍길동)" required autocomplete="name">
+            </div>
+            <div>
+              <label class="block font-label-sm text-label-sm text-on-surface-variant mb-xs" for="res-input-birth">생년월일 (8자리)</label>
+              <input id="res-input-birth" class="w-full bg-surface-container-low border border-surface-container-high rounded-xl px-md py-sm font-body-md text-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-on-surface" type="text" maxlength="10" placeholder="예: 1990-01-01 (대시 자동 입력)" required autocomplete="bday">
+            </div>
+            <div>
+              <label class="block font-label-sm text-label-sm text-on-surface-variant mb-xs" for="res-input-phone">연락처 / 전화번호</label>
+              <input id="res-input-phone" class="w-full bg-surface-container-low border border-surface-container-high rounded-xl px-md py-sm font-body-md text-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-on-surface" type="tel" maxlength="13" placeholder="예: 010-1234-5678" required autocomplete="tel">
+            </div>
+          </div>
+          <div class="p-md bg-surface-container-lowest border-t border-surface-container-high flex justify-end gap-sm shrink-0">
+            <button type="button" class="px-md py-sm rounded-full text-on-surface-variant font-label-md hover:bg-surface-container-low transition-colors" id="btn-cancel-res-modal">취소</button>
+            <button type="submit" id="btn-confirm-reservation" class="px-lg py-sm rounded-full bg-primary hover:bg-primary/90 text-on-primary font-label-md shadow-sm transition-colors flex items-center gap-1 font-bold">
+              <span class="material-symbols-outlined text-[18px]">check_circle</span>
+              <span>예약 신청하기</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 6) 커스텀 기간 검색(2회 클릭: 시작일 -> 종료일) 달력 모달 -->
+    <div class="fixed inset-0 z-[100] hidden flex items-center justify-center p-md" id="daterange-picker-modal">
+      <div class="absolute inset-0 bg-inverse-surface/40 backdrop-blur-sm" id="daterange-modal-overlay"></div>
+      <div class="bg-surface-container-lowest rounded-3xl shadow-2xl w-full max-w-sm relative z-10 overflow-hidden flex flex-col border border-outline-variant/30 animate-in fade-in zoom-in-95 duration-150">
+        <!-- 모달 헤더 -->
+        <div class="p-md bg-[#E0ECDB] flex items-center justify-between border-b border-outline-variant/20">
+          <div>
+            <span class="text-[11px] font-bold text-primary tracking-wide" id="dr-target-title">기간 검색</span>
+            <div class="font-bold text-on-surface text-xs mt-0.5" id="dr-status-message">시작일을 선택해주세요 (첫 번째 클릭)</div>
+          </div>
+          <button type="button" class="p-1 rounded-full hover:bg-black/5 text-on-surface-variant transition-colors cursor-pointer" id="btn-close-dr-modal">
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </div>
+
+        <!-- 현재 선택된 기간 배너 -->
+        <div class="bg-surface-container-low px-md py-2 border-b border-outline-variant/20 flex items-center justify-between text-xs">
+          <div class="flex items-center gap-1.5 font-mono text-[11px] text-on-surface">
+            <span id="dr-display-start" class="px-2 py-0.5 rounded-md bg-white border border-outline-variant/30 font-semibold text-primary">시작일 미선택</span>
+            <span>~</span>
+            <span id="dr-display-end" class="px-2 py-0.5 rounded-md bg-white border border-outline-variant/30 font-semibold text-on-surface">종료일 미선택</span>
+          </div>
+          <button type="button" id="btn-dr-clear" class="text-xs text-on-surface-variant hover:text-error transition-colors flex items-center gap-0.5 cursor-pointer">
+            <span class="material-symbols-outlined text-[14px]">restart_alt</span>
+            <span>초기화</span>
+          </button>
+        </div>
+
+        <!-- 달력 월 이동 바 & 그리드 -->
+        <div class="p-md pb-0">
+          <div class="flex items-center justify-between mb-2">
+            <button type="button" id="dr-prev-month-btn" class="p-1.5 rounded-lg hover:bg-surface-container-high transition-colors text-on-surface cursor-pointer">
+              <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+            </button>
+            <span id="dr-month-title" class="font-bold text-on-surface text-sm">2026년 10월</span>
+            <button type="button" id="dr-next-month-btn" class="p-1.5 rounded-lg hover:bg-surface-container-high transition-colors text-on-surface cursor-pointer">
+              <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+            </button>
+          </div>
+
+          <!-- 요일 헤더 -->
+          <div class="grid grid-cols-7 gap-1 text-center font-semibold text-[11px] mb-1">
+            <span class="text-red-500 py-1">일</span>
+            <span class="text-on-surface-variant py-1">월</span>
+            <span class="text-on-surface-variant py-1">화</span>
+            <span class="text-on-surface-variant py-1">수</span>
+            <span class="text-on-surface-variant py-1">목</span>
+            <span class="text-on-surface-variant py-1">금</span>
+            <span class="text-blue-500 py-1">토</span>
+          </div>
+
+          <!-- 날짜 그리드 -->
+          <div id="dr-calendar-grid" class="grid grid-cols-7 gap-1 text-center text-xs">
+            <!-- JS 동적 생성 -->
+          </div>
+        </div>
+
+        <!-- 빠른 선택 프리셋 버튼들 -->
+        <div class="p-md pt-3 border-t border-outline-variant/10 mt-3">
+          <div class="text-[11px] text-on-surface-variant font-medium mb-1.5">빠른 기간 선택:</div>
+          <div id="dr-presets-container" class="flex flex-wrap gap-1.5">
+            <!-- JS 동적 생성 -->
+          </div>
+        </div>
+
+        <!-- 하단 액션 버튼 -->
+        <div class="p-md bg-surface-container-low border-t border-outline-variant/20 flex justify-end gap-2">
+          <button type="button" id="btn-dr-cancel" class="px-3 py-1.5 rounded-full text-on-surface-variant text-xs font-medium hover:bg-surface-container transition-colors cursor-pointer">취소</button>
+          <button type="button" id="btn-dr-apply" class="px-4 py-1.5 rounded-full bg-primary hover:bg-primary/90 text-on-primary text-xs font-bold transition-all shadow-sm cursor-pointer flex items-center gap-1">
+            <span class="material-symbols-outlined text-[16px]">check</span>
+            <span>적용하기</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- 토스트 알림창 컨테이너 (design/_1) -->
     <div class="fixed bottom-xl left-1/2 -translate-x-1/2 z-[1000] flex flex-col space-y-2 pointer-events-none"
       id="toastContainer"></div>
@@ -1231,7 +1654,7 @@
 
   <!-- 설정 파일 로드 후 메인 앱 로드 (모듈 해제하여 로컬 더블클릭 실행 지원) -->
   <script src="firebase-config.js"></script>
-  <script src="app.js?v=9"></script>
+  <script src="app.js?v=19"></script>
 
   <!-- 서랍장 열고 닫는 전역 스크립트 바인딩 -->
   <script>

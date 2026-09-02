@@ -230,6 +230,13 @@ const DEFAULT_RECORDS = [
   }
 ];
 
+const DEFAULT_RESERVATIONS = [
+  { id: "res_sample_1", name: "김지수", birthDate: "19900101", phone: "010-1234-5678", date: "2026-10-06", time: "09:00", status: "Confirmed", createdAt: 1788200000000 },
+  { id: "res_sample_2", name: "이마음", birthDate: "19950505", phone: "010-2345-6789", date: "2026-10-07", time: "10:00", status: "Pending", createdAt: 1788201000000 },
+  { id: "res_sample_3", name: "박기쁨", birthDate: "19881225", phone: "010-3456-7890", date: "2026-10-07", time: "14:00", status: "Pending", createdAt: 1788202000000 },
+  { id: "res_sample_4", name: "무서명", birthDate: "19900101", phone: "010-8288-1801", date: "2026-10-10", time: "11:00", status: "Cancelled", createdAt: 1788203000000 }
+];
+
 function initLocalStorage() {
   let storedTypes = localStorage.getItem("crm_counseling_types");
   if (!storedTypes) {
@@ -261,6 +268,9 @@ function initLocalStorage() {
   }
   if (!localStorage.getItem("crm_records")) {
     localStorage.setItem("crm_records", JSON.stringify(DEFAULT_RECORDS));
+  }
+  if (!localStorage.getItem("crm_reservations")) {
+    localStorage.setItem("crm_reservations", JSON.stringify(DEFAULT_RESERVATIONS));
   }
 }
 
@@ -592,6 +602,56 @@ async function dbDeleteCounselingType(id) {
   }
 }
 
+async function dbGetReservations() {
+  if (window.isFirebaseMode) {
+    try {
+      const snap = await window.db.collection("counselingReservations").get();
+      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (e) {
+      console.error(e);
+      return [];
+    }
+  } else {
+    return JSON.parse(localStorage.getItem("crm_reservations") || "[]");
+  }
+}
+
+async function dbAddReservation(name, birthDate, phone, dateStr, timeStr) {
+  const newRes = {
+    name: name.trim(),
+    birthDate: birthDate.replace(/-/g, "").trim(),
+    phone: phone.trim(),
+    date: dateStr,
+    time: timeStr,
+    status: "Pending",
+    createdAt: Date.now()
+  };
+
+  if (window.isFirebaseMode) {
+    const docRef = await window.db.collection("counselingReservations").add(newRes);
+    return docRef.id;
+  } else {
+    const list = await dbGetReservations();
+    const id = "res_" + Date.now();
+    list.push({ id, ...newRes });
+    localStorage.setItem("crm_reservations", JSON.stringify(list));
+    return id;
+  }
+}
+
+async function dbUpdateReservationStatus(id, status) {
+  if (window.isFirebaseMode) {
+    await window.db.collection("counselingReservations").doc(id).update({ status });
+  } else {
+    const list = await dbGetReservations();
+    const idx = list.findIndex(r => r.id === id);
+    if (idx !== -1) {
+      list[idx].status = status;
+      localStorage.setItem("crm_reservations", JSON.stringify(list));
+    }
+  }
+}
+
 async function dbGetRecords() {
   if (window.isFirebaseMode) {
     try {
@@ -912,6 +972,37 @@ const DOM = {
   btnSaveNote: document.getElementById("btn-save-note"),
   drawerNotesList: document.getElementById("drawer-notes-list"),
   
+  // 상담 예약 달력 및 모달
+  calPrevBtn: document.getElementById("cal-prev-btn"),
+  calNextBtn: document.getElementById("cal-next-btn"),
+  calMonthTitle: document.getElementById("cal-month-title"),
+  calDaysGrid: document.getElementById("cal-days-grid"),
+  calSelectedDateText: document.getElementById("cal-selected-date-text"),
+  calTimeSlotsContainer: document.getElementById("cal-time-slots-container"),
+
+  reservationModal: document.getElementById("reservation-modal"),
+  reservationModalOverlay: document.getElementById("reservation-modal-overlay"),
+  formReservation: document.getElementById("form-reservation"),
+  resModalDatetimeDisplay: document.getElementById("res-modal-datetime-display"),
+  resInputName: document.getElementById("res-input-name"),
+  resInputBirth: document.getElementById("res-input-birth"),
+  resInputPhone: document.getElementById("res-input-phone"),
+  btnCloseResModal: document.getElementById("btn-close-res-modal"),
+  btnCancelResModal: document.getElementById("btn-cancel-res-modal"),
+  btnConfirmReservation: document.getElementById("btn-confirm-reservation"),
+
+  // 사이드바 네비 및 탭
+  navClients: document.getElementById("nav-clients"),
+  navReservations: document.getElementById("nav-reservations"),
+  navCounseling: document.getElementById("nav-counseling"),
+  navTelegram: document.getElementById("nav-telegram"),
+  navManagers: document.getElementById("nav-managers"),
+  tabClients: document.getElementById("tab-clients"),
+  tabReservations: document.getElementById("tab-reservations"),
+  tabCounseling: document.getElementById("tab-counseling"),
+  tabTelegram: document.getElementById("tab-telegram"),
+  tabManagers: document.getElementById("tab-managers"),
+
   // 토스트 컨테이너
   toastContainer: document.getElementById("toastContainer")
 };
@@ -927,7 +1018,9 @@ const HASH_TO_VIEW = {
   "#/success": "client-success",
   "#/admin/login": "admin-login",
   "#/admin/customerlist": "admin-dashboard",
+  "#/admin/reservations": "admin-dashboard",
   "#/admin/administration": "admin-dashboard",
+  "#/admin/telegram": "admin-dashboard",
   "#/admin/managers": "admin-dashboard"
 };
 
@@ -971,6 +1064,7 @@ function renderView(viewId) {
     currentClient = null;
     selectedCounselingType = null;
     sessionStorage.removeItem("crm_current_client");
+    renderReservationCalendar();
   } else if (viewId === "client-select") {
     DOM.clientSelectView.classList.remove("hidden");
     DOM.currentClientDisplay.textContent = currentClient.name;
@@ -994,26 +1088,60 @@ function renderView(viewId) {
     const navInactiveClass = "w-full flex items-center px-md py-sm rounded-xl text-on-surface-variant hover:bg-surface-container-high/50 hover:text-on-surface transition-all group";
     const navActiveClass = "w-full flex items-center px-md py-sm rounded-xl bg-primary-container text-on-primary-container font-semibold transition-all group";
 
-    if (activeTab === "counseling") {
+    if (activeTab === "reservations") {
       DOM.navClients.className = navInactiveClass;
-      DOM.navCounseling.className = navActiveClass;
+      if (DOM.navReservations) DOM.navReservations.className = navActiveClass;
+      DOM.navCounseling.className = navInactiveClass;
+      if (DOM.navTelegram) DOM.navTelegram.className = navInactiveClass;
       if (DOM.navManagers) DOM.navManagers.className = navInactiveClass;
       DOM.tabClients.classList.add("hidden");
+      if (DOM.tabReservations) DOM.tabReservations.classList.remove("hidden");
+      DOM.tabCounseling.classList.add("hidden");
+      if (DOM.tabTelegram) DOM.tabTelegram.classList.add("hidden");
+      if (DOM.tabManagers) DOM.tabManagers.classList.add("hidden");
+    } else if (activeTab === "counseling") {
+      DOM.navClients.className = navInactiveClass;
+      if (DOM.navReservations) DOM.navReservations.className = navInactiveClass;
+      DOM.navCounseling.className = navActiveClass;
+      if (DOM.navTelegram) DOM.navTelegram.className = navInactiveClass;
+      if (DOM.navManagers) DOM.navManagers.className = navInactiveClass;
+      DOM.tabClients.classList.add("hidden");
+      if (DOM.tabReservations) DOM.tabReservations.classList.add("hidden");
       DOM.tabCounseling.classList.remove("hidden");
+      if (DOM.tabTelegram) DOM.tabTelegram.classList.add("hidden");
+      if (DOM.tabManagers) DOM.tabManagers.classList.add("hidden");
+    } else if (activeTab === "telegram") {
+      DOM.navClients.className = navInactiveClass;
+      if (DOM.navReservations) DOM.navReservations.className = navInactiveClass;
+      DOM.navCounseling.className = navInactiveClass;
+      if (DOM.navTelegram) DOM.navTelegram.className = navActiveClass;
+      if (DOM.navManagers) DOM.navManagers.className = navInactiveClass;
+      DOM.tabClients.classList.add("hidden");
+      if (DOM.tabReservations) DOM.tabReservations.classList.add("hidden");
+      DOM.tabCounseling.classList.add("hidden");
+      if (DOM.tabTelegram) DOM.tabTelegram.classList.remove("hidden");
       if (DOM.tabManagers) DOM.tabManagers.classList.add("hidden");
     } else if (activeTab === "managers") {
       DOM.navClients.className = navInactiveClass;
+      if (DOM.navReservations) DOM.navReservations.className = navInactiveClass;
       DOM.navCounseling.className = navInactiveClass;
+      if (DOM.navTelegram) DOM.navTelegram.className = navInactiveClass;
       if (DOM.navManagers) DOM.navManagers.className = navActiveClass;
       DOM.tabClients.classList.add("hidden");
+      if (DOM.tabReservations) DOM.tabReservations.classList.add("hidden");
       DOM.tabCounseling.classList.add("hidden");
+      if (DOM.tabTelegram) DOM.tabTelegram.classList.add("hidden");
       if (DOM.tabManagers) DOM.tabManagers.classList.remove("hidden");
     } else {
       DOM.navClients.className = navActiveClass;
+      if (DOM.navReservations) DOM.navReservations.className = navInactiveClass;
       DOM.navCounseling.className = navInactiveClass;
+      if (DOM.navTelegram) DOM.navTelegram.className = navInactiveClass;
       if (DOM.navManagers) DOM.navManagers.className = navInactiveClass;
       DOM.tabClients.classList.remove("hidden");
+      if (DOM.tabReservations) DOM.tabReservations.classList.add("hidden");
       DOM.tabCounseling.classList.add("hidden");
+      if (DOM.tabTelegram) DOM.tabTelegram.classList.add("hidden");
       if (DOM.tabManagers) DOM.tabManagers.classList.add("hidden");
     }
     
@@ -1133,8 +1261,12 @@ function handleRouting() {
     }
     
     // 해시 값에 따른 탭 자동 전환
-    if (hash === "#/admin/administration") {
+    if (hash === "#/admin/reservations") {
+      activeTab = "reservations";
+    } else if (hash === "#/admin/administration") {
       activeTab = "counseling";
+    } else if (hash === "#/admin/telegram") {
+      activeTab = "telegram";
     } else if (hash === "#/admin/managers") {
       activeTab = "managers";
     } else {
@@ -1706,8 +1838,12 @@ function handleAdminLogout() {
 async function refreshAdminDashboard() {
   if (activeTab === "clients") {
     await renderClientDirectory();
+  } else if (activeTab === "reservations") {
+    await renderReservationManagementList();
   } else if (activeTab === "counseling") {
     await renderCounselingManagementGrid();
+  } else if (activeTab === "telegram") {
+    await initTelegramSettingsUI();
   } else if (activeTab === "managers") {
     await renderAdminDirectory();
   }
@@ -1834,26 +1970,45 @@ function openAdminEditModal(admin) {
 }
 
 // [탭 1] 내담자 디렉토리 렌더링
-// [탭 1] 내담자 디렉토리 렌더링
 async function renderClientDirectory() {
   const clients = await dbGetClients();
   const records = await dbGetRecords();
   const notes = await dbGetAllNotes();
   const queryText = DOM.searchClient.value.toLowerCase().trim();
 
-  // 대시보드 카드 지표 계산
-  DOM.statTotalClients.textContent = clients.length;
-  DOM.statPendingSessions.textContent = records.filter(r => r.status === "Pending").length;
+  // 검색 및 기간 적용 (성함, 연락처, 생년월일 검색 지원)
+  const filtered = clients.filter(c => {
+    const matchName = c.name.toLowerCase().includes(queryText);
+    const matchBirth = (c.birthDate || "").includes(queryText);
+    const cleanPhone = (c.phone || "").replace(/[^0-9]/g, "");
+    const cleanQuery = queryText.replace(/[^0-9]/g, "");
+    const matchPhone = (c.phone || "").includes(queryText) || (cleanQuery && cleanPhone.includes(cleanQuery));
+    const matchQuery = matchName || matchBirth || matchPhone;
+    if (!matchQuery) return false;
+
+    if (clientDateRange.start || clientDateRange.end) {
+      const regDate = new Date(c.createdAt || Date.now());
+      const regDateStr = `${regDate.getFullYear()}-${String(regDate.getMonth() + 1).padStart(2, '0')}-${String(regDate.getDate()).padStart(2, '0')}`;
+      if (clientDateRange.start && regDateStr < clientDateRange.start) return false;
+      if (clientDateRange.end && regDateStr > clientDateRange.end) return false;
+    }
+    return true;
+  });
+
+  // 대시보드 카드 지표 계산 (검색/필터링 결과 실시간 연동)
+  DOM.statTotalClients.textContent = filtered.length;
+  const filteredClientIds = new Set(filtered.map(c => c.id));
+  const filteredRecords = records.filter(r => filteredClientIds.has(r.clientId));
+  DOM.statPendingSessions.textContent = filteredRecords.filter(r => r.status === "Pending").length;
   
   const startOfToday = new Date().setHours(0,0,0,0);
-  const completedTodayCount = records.filter(r => r.status === "Completed" && r.submittedAt >= startOfToday).length;
+  const completedTodayCount = filteredRecords.filter(r => r.status === "Completed" && r.submittedAt >= startOfToday).length;
   DOM.statCompletedSessions.textContent = completedTodayCount;
 
-  // 검색 적용
-  const filtered = clients.filter(c => 
-    c.name.toLowerCase().includes(queryText) || 
-    c.birthDate.includes(queryText)
-  );
+  // N개씩 보기 적용
+  const pageSizeSelect = document.getElementById("client-page-size");
+  const pageSize = pageSizeSelect ? parseInt(pageSizeSelect.value, 10) : 20;
+  const displayClients = filtered.slice(0, pageSize);
 
   DOM.clientListTableBody.innerHTML = "";
 
@@ -1868,7 +2023,7 @@ async function renderClientDirectory() {
     return;
   }
 
-  filtered.forEach(client => {
+  displayClients.forEach(client => {
     const clientRecords = records.filter(r => r.clientId === client.id);
     const clientNotes = notes.filter(n => n.clientId === client.id).sort((a, b) => b.createdAt - a.createdAt);
     const hasNotes = clientNotes.length > 0;
@@ -2529,13 +2684,158 @@ function registerEventListeners() {
     window.location.hash = "#/admin/customerlist";
   });
 
+  if (DOM.navReservations) {
+    DOM.navReservations.addEventListener("click", () => {
+      window.location.hash = "#/admin/reservations";
+    });
+  }
+
   DOM.navCounseling.addEventListener("click", () => {
     window.location.hash = "#/admin/administration";
   });
 
+  if (DOM.navTelegram) {
+    DOM.navTelegram.addEventListener("click", () => {
+      window.location.hash = "#/admin/telegram";
+    });
+  }
+
   if (DOM.navManagers) {
     DOM.navManagers.addEventListener("click", () => {
       window.location.hash = "#/admin/managers";
+    });
+  }
+
+  // 내담자 리스트 기간 검색 모달 열기 & 초기화
+  const btnOpenClientDr = document.getElementById("btn-open-client-daterange");
+  if (btnOpenClientDr) {
+    btnOpenClientDr.addEventListener("click", () => openDateRangeModal("clients"));
+  }
+
+  const btnClientDateReset = document.getElementById("btn-client-date-reset");
+  if (btnClientDateReset) {
+    btnClientDateReset.addEventListener("click", () => resetDateRange("clients"));
+  }
+
+  // 예약 관리 상태 필터 버튼
+  document.querySelectorAll(".res-filter-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".res-filter-btn").forEach(b => {
+        b.className = "res-filter-btn h-[38px] px-3.5 rounded-full text-[13px] font-semibold bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-all cursor-pointer";
+      });
+      btn.className = "res-filter-btn h-[38px] px-3.5 rounded-full text-[13px] font-semibold bg-primary text-on-primary transition-all cursor-pointer shadow-sm";
+      resCurrentStatusFilter = btn.dataset.status;
+      renderReservationManagementList();
+    });
+  });
+
+  // 예약 관리 기간 검색 모달 열기 & 초기화
+  const btnOpenResDr = document.getElementById("btn-open-res-daterange");
+  if (btnOpenResDr) {
+    btnOpenResDr.addEventListener("click", () => openDateRangeModal("reservations"));
+  }
+
+  const btnResDateReset = document.getElementById("btn-res-date-reset");
+  if (btnResDateReset) {
+    btnResDateReset.addEventListener("click", () => resetDateRange("reservations"));
+  }
+
+  // 예약 관리 테이블 헤더 정렬 클릭 이벤트
+  const thSortDt = document.getElementById("th-sort-res-datetime");
+  if (thSortDt) {
+    thSortDt.addEventListener("click", () => toggleResSort("datetime"));
+  }
+
+  const thSortCr = document.getElementById("th-sort-res-created");
+  if (thSortCr) {
+    thSortCr.addEventListener("click", () => toggleResSort("created"));
+  }
+
+  // N개씩 보기 드롭다운 변경 이벤트
+  const clientPageSizeSelect = document.getElementById("client-page-size");
+  if (clientPageSizeSelect) {
+    clientPageSizeSelect.addEventListener("change", renderClientDirectory);
+  }
+
+  const resPageSizeSelect = document.getElementById("res-page-size");
+  if (resPageSizeSelect) {
+    resPageSizeSelect.addEventListener("change", renderReservationManagementList);
+  }
+
+  // 커스텀 기간 검색 모달 제어 이벤트
+  const btnCloseDr = document.getElementById("btn-close-dr-modal");
+  const overlayDr = document.getElementById("daterange-modal-overlay");
+  const btnCancelDr = document.getElementById("btn-dr-cancel");
+  if (btnCloseDr) btnCloseDr.addEventListener("click", closeDateRangeModal);
+  if (overlayDr) overlayDr.addEventListener("click", closeDateRangeModal);
+  if (btnCancelDr) btnCancelDr.addEventListener("click", closeDateRangeModal);
+
+  const btnClearDr = document.getElementById("btn-dr-clear");
+  if (btnClearDr) btnClearDr.addEventListener("click", clearDateRangeSelection);
+
+  const btnApplyDr = document.getElementById("btn-dr-apply");
+  if (btnApplyDr) btnApplyDr.addEventListener("click", applyDateRangeModal);
+
+  const btnPrevDrMonth = document.getElementById("dr-prev-month-btn");
+  if (btnPrevDrMonth) {
+    btnPrevDrMonth.addEventListener("click", () => {
+      drViewMonth--;
+      if (drViewMonth < 0) {
+        drViewMonth = 11;
+        drViewYear--;
+      }
+      renderDateRangeCalendar();
+    });
+  }
+
+  const btnNextDrMonth = document.getElementById("dr-next-month-btn");
+  if (btnNextDrMonth) {
+    btnNextDrMonth.addEventListener("click", () => {
+      drViewMonth++;
+      if (drViewMonth > 11) {
+        drViewMonth = 0;
+        drViewYear++;
+      }
+      renderDateRangeCalendar();
+    });
+  }
+
+  const searchResInput = document.getElementById("search-reservation");
+  if (searchResInput) {
+    searchResInput.addEventListener("input", renderReservationManagementList);
+  }
+
+  const btnRefreshRes = document.getElementById("btn-refresh-reservations");
+  if (btnRefreshRes) {
+    btnRefreshRes.addEventListener("click", () => {
+      renderReservationManagementList();
+      showToast("예약 목록이 새로고침되었습니다.");
+    });
+  }
+
+  // 텔레그램 알림 수신 설정 버튼 이벤트
+  const btnSaveTg = document.getElementById("btn-save-telegram-chat-id");
+  if (btnSaveTg) {
+    btnSaveTg.addEventListener("click", saveTelegramSettingsUI);
+  }
+
+  const btnDeleteTg = document.getElementById("btn-delete-telegram-chat-id");
+  if (btnDeleteTg) {
+    btnDeleteTg.addEventListener("click", deleteTelegramSettingsUI);
+  }
+
+  const btnTestTg = document.getElementById("btn-test-telegram-send");
+  if (btnTestTg) {
+    btnTestTg.addEventListener("click", testTelegramSettingsUI);
+  }
+
+  const inputTg = document.getElementById("setting-telegram-chat-id");
+  if (inputTg) {
+    inputTg.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        saveTelegramSettingsUI();
+      }
     });
   }
 
@@ -2855,9 +3155,1067 @@ function registerEventListeners() {
     });
   }
 
+  // 생년월일 자동 하이픈 (예약 모달)
+  if (DOM.resInputBirth) {
+    DOM.resInputBirth.addEventListener("input", (e) => {
+      let val = e.target.value.replace(/\D/g, "");
+      if (val.length > 8) val = val.slice(0, 8);
+      if (val.length >= 4 && val.length < 6) {
+        val = val.slice(0, 4) + "-" + val.slice(4);
+      } else if (val.length >= 6) {
+        val = val.slice(0, 4) + "-" + val.slice(4, 6) + "-" + val.slice(6);
+      }
+      e.target.value = val;
+    });
+  }
+
+  // 전화번호 자동 하이픈 (예약 모달)
+  if (DOM.resInputPhone) {
+    DOM.resInputPhone.addEventListener("input", (e) => {
+      let val = e.target.value.replace(/\D/g, "");
+      if (val.length > 11) val = val.slice(0, 11);
+      if (val.length >= 3 && val.length < 7) {
+        val = val.slice(0, 3) + "-" + val.slice(3);
+      } else if (val.length >= 7) {
+        val = val.slice(0, 3) + "-" + val.slice(3, 7) + "-" + val.slice(7);
+      }
+      e.target.value = val;
+    });
+  }
+
+  // 예약 달력 이전/다음 달 버튼
+  if (DOM.calPrevBtn) {
+    DOM.calPrevBtn.addEventListener("click", () => {
+      const months = getAvailableMonthRange();
+      calCurrentYear = months[0].year;
+      calCurrentMonth = months[0].month;
+      calSelectedDate = null;
+      renderReservationCalendar();
+    });
+  }
+  if (DOM.calNextBtn) {
+    DOM.calNextBtn.addEventListener("click", () => {
+      const months = getAvailableMonthRange();
+      calCurrentYear = months[1].year;
+      calCurrentMonth = months[1].month;
+      calSelectedDate = null;
+      renderReservationCalendar();
+    });
+  }
+
+  // 예약 모달 닫기
+  if (DOM.btnCloseResModal) DOM.btnCloseResModal.addEventListener("click", closeReservationModal);
+  if (DOM.btnCancelResModal) DOM.btnCancelResModal.addEventListener("click", closeReservationModal);
+  if (DOM.reservationModalOverlay) DOM.reservationModalOverlay.addEventListener("click", closeReservationModal);
+
+  // 예약 확정 제출
+  if (DOM.formReservation) {
+    DOM.formReservation.addEventListener("submit", handleConfirmReservation);
+  }
+
   // 문서 전체 클릭 시 모든 상담 기록 버블 닫기
   document.addEventListener("click", () => {
     document.querySelectorAll(".note-bubble").forEach(b => b.classList.add("hidden"));
+  });
+}
+
+// ============================================================================
+// 10. 상담 예약 달력 및 예약 신청/관리 로직 + 텔레그램 알림 연동
+// ============================================================================
+const TELEGRAM_BOT_TOKEN = "8852696539:AAFfPbSp5-s2oU2HNkqIilNNxS5oCUWW-w0";
+const INITIAL_DEFAULT_TELEGRAM_CHAT_ID = "5318116202"; // 초기 기본 관리자 Chat ID
+
+// DB 및 로컬 스토리지에서 텔레그램 Chat ID 조회
+async function dbGetTelegramChatId() {
+  if (window.isFirebaseMode) {
+    try {
+      const doc = await window.db.collection("crm_settings").doc("telegram").get();
+      if (doc.exists) {
+        const data = doc.data();
+        if (data.chatId !== undefined) {
+          return data.chatId;
+        }
+      }
+    } catch (e) {
+      console.warn("Firebase telegram config fetch warning:", e);
+    }
+  }
+
+  const stored = localStorage.getItem("crm_telegram_chat_id");
+  if (stored !== null) return stored;
+  return INITIAL_DEFAULT_TELEGRAM_CHAT_ID;
+}
+
+// 텔레그램 Chat ID 저장 (DB & 로컬 동기화)
+async function dbSaveTelegramChatId(chatId) {
+  const trimmed = (chatId || "").trim();
+  if (window.isFirebaseMode) {
+    try {
+      await window.db.collection("crm_settings").doc("telegram").set({
+        chatId: trimmed,
+        updatedAt: Date.now()
+      }, { merge: true });
+    } catch (e) {
+      console.error("Firebase telegram config save error:", e);
+    }
+  }
+  localStorage.setItem("crm_telegram_chat_id", trimmed);
+}
+
+// 텔레그램 Chat ID 삭제 (DB & 로컬 동기화)
+async function dbDeleteTelegramChatId() {
+  if (window.isFirebaseMode) {
+    try {
+      await window.db.collection("crm_settings").doc("telegram").set({
+        chatId: "",
+        updatedAt: Date.now()
+      }, { merge: true });
+    } catch (e) {
+      console.error("Firebase telegram config delete error:", e);
+    }
+  }
+  localStorage.setItem("crm_telegram_chat_id", "");
+}
+
+// 텔레그램 설정 UI 초기화 및 상태 반영
+async function initTelegramSettingsUI() {
+  const inputEl = document.getElementById("setting-telegram-chat-id");
+  const badgeEl = document.getElementById("telegram-status-badge");
+  if (!inputEl) return;
+
+  const currentChatId = await dbGetTelegramChatId();
+  inputEl.value = currentChatId || "";
+
+  if (badgeEl) {
+    if (currentChatId) {
+      badgeEl.textContent = "연동 활성";
+      badgeEl.className = "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200";
+    } else {
+      badgeEl.textContent = "미연동 (알림 꺼짐)";
+      badgeEl.className = "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-500 border border-gray-200";
+    }
+  }
+}
+
+// 텔레그램 설정 저장 핸들러
+async function saveTelegramSettingsUI() {
+  const inputEl = document.getElementById("setting-telegram-chat-id");
+  if (!inputEl) return;
+
+  const val = inputEl.value.trim();
+  if (!val) {
+    showToast("저장할 텔레그램 Chat ID를 입력해주세요. (삭제를 원하시면 삭제 버튼을 눌러주세요)", "warning");
+    return;
+  }
+
+  await dbSaveTelegramChatId(val);
+  await initTelegramSettingsUI();
+  showToast("텔레그램 수신 Chat ID가 성공적으로 저장되었습니다.", "success");
+}
+
+// 텔레그램 설정 삭제 핸들러
+async function deleteTelegramSettingsUI() {
+  const isConfirmed = confirm(
+    "텔레그램 알림 수신 설정을 삭제하시겠습니까?\n\n" +
+    "※ 삭제 시 새로운 상담 예약이 들어와도 텔레그램 알림이 발송되지 않습니다."
+  );
+  if (!isConfirmed) return;
+
+  await dbDeleteTelegramChatId();
+  await initTelegramSettingsUI();
+  showToast("텔레그램 알림 연동이 삭제되었습니다.", "info");
+}
+
+// 텔레그램 설정 테스트 전송 핸들러
+async function testTelegramSettingsUI() {
+  const inputEl = document.getElementById("setting-telegram-chat-id");
+  const targetChatId = inputEl ? inputEl.value.trim() : "";
+
+  if (!targetChatId) {
+    showToast("먼저 Chat ID를 입력하거나 저장한 후 테스트를 진행해주세요.", "warning");
+    return;
+  }
+
+  showToast("텔레그램으로 테스트 메시지를 발송하는 중...", "info");
+
+  const testData = {
+    name: "홍길동 (테스트 신청자)",
+    birthDate: "19950505",
+    phone: "010-1234-5678",
+    date: "2026-10-14",
+    time: "14:00"
+  };
+
+  const success = await sendTelegramReservationNotification(testData, targetChatId);
+  if (success) {
+    showToast("텔레그램 봇으로 테스트 알림이 성공적으로 전송되었습니다!", "success");
+  } else {
+    showToast("발송 실패: 봇(@metasoma_bot)에서 /start를 누르셨는지 또는 ID를 확인해주세요.", "error");
+  }
+}
+
+// 텔레그램 봇으로 예약 정보 전송
+async function sendTelegramReservationNotification(reservation, customChatId = null) {
+  try {
+    const chatId = customChatId || await dbGetTelegramChatId();
+    if (!chatId) {
+      console.warn("ℹ️ 텔레그램 Chat ID가 설정되지 않아 알림 발송을 건너뜁니다.");
+      return false;
+    }
+
+    const birthFormatted = (reservation.birthDate || "").length === 8
+      ? `${reservation.birthDate.slice(0, 4)}-${reservation.birthDate.slice(4, 6)}-${reservation.birthDate.slice(6, 8)}`
+      : (reservation.birthDate || "-");
+
+    const nowStr = new Date().toLocaleString("ko-KR", {
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", hour12: false
+    });
+
+    const messageText = 
+      `🔔 <b>[메타소마 미술치료 연구소] 신규 상담 예약 신청</b>\n\n` +
+      `👤 <b>예약자명:</b> ${reservation.name}\n` +
+      `🎂 <b>생년월일:</b> ${birthFormatted}\n` +
+      `📞 <b>연락처:</b> ${reservation.phone}\n` +
+      `📅 <b>예약일시:</b> ${reservation.date} ${reservation.time}\n` +
+      `⏱ <b>신청일시:</b> ${nowStr}\n\n` +
+      `<i>※ 확인 전화 후 관리자 페이지에서 예약을 확정해주세요.</i>`;
+
+    const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: messageText,
+        parse_mode: "HTML"
+      })
+    });
+
+    const data = await res.json();
+    return data.ok === true;
+  } catch (err) {
+    console.error("텔레그램 알림 발송 중 오류:", err);
+    return false;
+  }
+}
+
+let calCurrentYear = 2026;
+let calCurrentMonth = 9; // 0-indexed: 9 = 10월
+let calSelectedDate = "2026-10-06"; // 초기 선택 날짜
+let calSelectedTime = null;
+let resCurrentStatusFilter = "all";
+
+// 향후 2개월 (익월, 익익월) 정보 반환
+function getAvailableMonthRange() {
+  const now = new Date();
+  const m1 = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const m2 = new Date(now.getFullYear(), now.getMonth() + 2, 1);
+  return [
+    { year: m1.getFullYear(), month: m1.getMonth() },
+    { year: m2.getFullYear(), month: m2.getMonth() }
+  ];
+}
+
+// 요일별 운영 시간 슬롯 (0: 일, 1: 월, 2: 화, 3: 수, 4: 목, 5: 금, 6: 토)
+function getOperatingTimeSlots(dayOfWeek) {
+  switch (dayOfWeek) {
+    case 1: // 월요일: 센터 휴무
+      return [];
+    case 2: // 화요일: 09:00 ~ 12:00 (4타임)
+      return ["09:00", "10:00", "11:00", "12:00"];
+    case 3: // 수요일: 09:00 ~ 22:00 (13:00 점심시간 제외)
+      return [
+        "09:00", "10:00", "11:00", "12:00",
+        "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"
+      ];
+    case 4: // 목요일: 09:00 ~ 12:00, 21:00 ~ 22:00
+      return ["09:00", "10:00", "11:00", "12:00", "21:00", "22:00"];
+    case 5: // 금요일: 09:00 ~ 12:00, 21:00 ~ 22:00
+      return ["09:00", "10:00", "11:00", "12:00", "21:00", "22:00"];
+    case 6: // 토요일: 09:00 ~ 21:00 (13:00 점심시간 제외)
+      return [
+        "09:00", "10:00", "11:00", "12:00",
+        "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"
+      ];
+    case 0: // 일요일: 09:00 ~ 12:00
+      return ["09:00", "10:00", "11:00", "12:00"];
+    default:
+      return [];
+  }
+}
+
+// 달력 렌더링
+async function renderReservationCalendar() {
+  if (!DOM.calDaysGrid) return;
+  const months = getAvailableMonthRange();
+  const m1 = months[0];
+  const m2 = months[1];
+
+  // 현재 표시 월이 범위 밖이면 m1으로 초기화
+  if ((calCurrentYear === m1.year && calCurrentMonth === m1.month) || (calCurrentYear === m2.year && calCurrentMonth === m2.month)) {
+    // 정상 범위
+  } else {
+    calCurrentYear = m1.year;
+    calCurrentMonth = m1.month;
+  }
+
+  // 상단 월 라벨 및 이전/다음 버튼 활성/비활성화
+  if (DOM.calMonthTitle) DOM.calMonthTitle.textContent = `${calCurrentYear}년 ${calCurrentMonth + 1}월`;
+  if (DOM.calPrevBtn) DOM.calPrevBtn.disabled = (calCurrentYear === m1.year && calCurrentMonth === m1.month);
+  if (DOM.calNextBtn) DOM.calNextBtn.disabled = (calCurrentYear === m2.year && calCurrentMonth === m2.month);
+
+  const daysInMonth = new Date(calCurrentYear, calCurrentMonth + 1, 0).getDate();
+  const firstDayOfWeek = new Date(calCurrentYear, calCurrentMonth, 1).getDay();
+
+  DOM.calDaysGrid.innerHTML = "";
+
+  // 1일 이전 공백 칸 채우기
+  for (let i = 0; i < firstDayOfWeek; i++) {
+    const emptyCell = document.createElement("div");
+    emptyCell.className = "p-1";
+    DOM.calDaysGrid.appendChild(emptyCell);
+  }
+
+  let foundFirstOperatingDate = null;
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateObj = new Date(calCurrentYear, calCurrentMonth, day);
+    const dayOfWeek = dateObj.getDay();
+    const dateStr = `${calCurrentYear}-${String(calCurrentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const isMonday = (dayOfWeek === 1);
+
+    if (!isMonday && !foundFirstOperatingDate) {
+      foundFirstOperatingDate = dateStr;
+    }
+
+    const cell = document.createElement("button");
+    cell.type = "button";
+
+    if (isMonday) {
+      // 월요일: 센터 휴무 (약한 회색 처리 및 선택 불가)
+      cell.className = "p-1 rounded-xl text-center bg-gray-100/70 border border-transparent text-gray-400 cursor-not-allowed select-none flex flex-col items-center justify-center min-h-[44px]";
+      cell.disabled = true;
+      cell.innerHTML = `
+        <span class="text-xs font-semibold">${day}</span>
+        <span class="text-[9px] text-gray-400 font-normal">휴무</span>
+      `;
+    } else {
+      // 운영 요일
+      const isSelected = (calSelectedDate === dateStr);
+      let textColor = "text-on-surface";
+      if (dayOfWeek === 0) textColor = "text-red-500";
+      if (dayOfWeek === 6) textColor = "text-blue-500";
+
+      if (isSelected) {
+        cell.className = "p-1 rounded-xl text-center border-2 border-primary bg-primary/10 text-primary font-bold shadow-sm flex flex-col items-center justify-center min-h-[44px] transition-all";
+      } else {
+        cell.className = `p-1 rounded-xl text-center hover:bg-surface-container-high/60 bg-surface-container-lowest/60 border border-outline-variant/30 ${textColor} cursor-pointer flex flex-col items-center justify-center min-h-[44px] transition-all`;
+      }
+
+      cell.innerHTML = `
+        <span class="text-xs font-semibold leading-none mb-0.5">${day}</span>
+        <span class="text-[9px] text-on-surface-variant/70 font-normal">예약</span>
+      `;
+
+      cell.addEventListener("click", () => {
+        calSelectedDate = dateStr;
+        renderReservationCalendar();
+        renderTimeSlots(dateStr, dayOfWeek);
+      });
+    }
+
+    DOM.calDaysGrid.appendChild(cell);
+  }
+
+  // 선택된 날짜가 현재 월에 속하지 않거나 없으면 첫 운영일로 기본 선택
+  if (!calSelectedDate || !calSelectedDate.startsWith(`${calCurrentYear}-${String(calCurrentMonth + 1).padStart(2, "0")}`)) {
+    calSelectedDate = foundFirstOperatingDate || `${calCurrentYear}-${String(calCurrentMonth + 1).padStart(2, "0")}-01`;
+  }
+
+  const selectedDateParts = calSelectedDate.split("-");
+  const selectedDateObj = new Date(parseInt(selectedDateParts[0]), parseInt(selectedDateParts[1]) - 1, parseInt(selectedDateParts[2]));
+  renderTimeSlots(calSelectedDate, selectedDateObj.getDay());
+}
+
+// 시간 슬롯 렌더링
+async function renderTimeSlots(dateStr, dayOfWeek) {
+  if (!DOM.calTimeSlotsContainer) return;
+  const weekNames = ["일", "월", "화", "수", "목", "금", "토"];
+  const dayName = weekNames[dayOfWeek] || "";
+  
+  if (DOM.calSelectedDateText) {
+    DOM.calSelectedDateText.textContent = `${dateStr} (${dayName}) 상담 시간 선택`;
+  }
+  DOM.calTimeSlotsContainer.innerHTML = `<div class="col-span-full py-4 text-center text-xs text-on-surface-variant/50">시간표 불러오는 중...</div>`;
+
+  if (dayOfWeek === 1) {
+    // 월요일
+    DOM.calTimeSlotsContainer.innerHTML = `
+      <div class="col-span-full py-6 text-center text-on-surface-variant/60 text-xs flex flex-col items-center gap-1">
+        <span class="material-symbols-outlined text-[24px] text-gray-400">event_busy</span>
+        <span>매주 월요일은 센터 정기 휴무일입니다.</span>
+      </div>
+    `;
+    return;
+  }
+
+  const slots = getOperatingTimeSlots(dayOfWeek);
+  if (slots.length === 0) {
+    DOM.calTimeSlotsContainer.innerHTML = `
+      <div class="col-span-full py-6 text-center text-on-surface-variant/60 text-xs">
+        해당 일자에는 예약 가능한 운영 시간이 없습니다.
+      </div>
+    `;
+    return;
+  }
+
+  const allReservations = await dbGetReservations();
+  // Pending(신청 대기) 또는 Confirmed(예약 확정) 상태인 예약만 해당 시간을 점유
+  const bookedTimes = new Set(
+    allReservations
+      .filter(r => r.date === dateStr && (r.status === "Pending" || r.status === "Confirmed" || !r.status))
+      .map(r => r.time)
+  );
+
+  DOM.calTimeSlotsContainer.innerHTML = "";
+
+  slots.forEach(timeStr => {
+    const isBooked = bookedTimes.has(timeStr);
+    const btn = document.createElement("button");
+    btn.type = "button";
+
+    if (isBooked) {
+      // 예약 완료: 빨간색 & 클릭 불가
+      btn.disabled = true;
+      btn.className = "py-2 px-1.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-semibold flex flex-col items-center justify-center cursor-not-allowed opacity-85 shadow-none select-none";
+      btn.innerHTML = `
+        <span class="text-xs font-bold">${timeStr}</span>
+        <span class="text-[10px] text-red-500 font-normal">예약완료</span>
+      `;
+    } else {
+      // 예약 가능: 초록색 & 클릭 시 모달 오픈
+      btn.className = "py-2 px-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white text-xs font-semibold flex flex-col items-center justify-center shadow-sm transition-all cursor-pointer group";
+      btn.innerHTML = `
+        <span class="text-xs font-bold">${timeStr}</span>
+        <span class="text-[10px] text-emerald-100 group-hover:text-white font-normal">예약가능</span>
+      `;
+
+      btn.addEventListener("click", () => {
+        openReservationModal(dateStr, timeStr, dayName);
+      });
+    }
+
+    DOM.calTimeSlotsContainer.appendChild(btn);
+  });
+}
+
+// 예약 신청 모달 열기
+function openReservationModal(dateStr, timeStr, dayName) {
+  calSelectedDate = dateStr;
+  calSelectedTime = timeStr;
+
+  if (DOM.resModalDatetimeDisplay) {
+    DOM.resModalDatetimeDisplay.textContent = `${dateStr} (${dayName}) ${timeStr}`;
+  }
+  if (DOM.resInputName) DOM.resInputName.value = "";
+  if (DOM.resInputBirth) DOM.resInputBirth.value = "";
+  if (DOM.resInputPhone) DOM.resInputPhone.value = "";
+
+  if (DOM.reservationModal) {
+    DOM.reservationModal.classList.remove("hidden");
+    setTimeout(() => {
+      if (DOM.resInputName) DOM.resInputName.focus();
+    }, 50);
+  }
+}
+
+function closeReservationModal() {
+  if (DOM.reservationModal) DOM.reservationModal.classList.add("hidden");
+}
+
+// 예약 신청 처리
+async function handleConfirmReservation(e) {
+  if (e) e.preventDefault();
+  const name = DOM.resInputName.value.trim();
+  const birth = DOM.resInputBirth.value.trim().replace(/[^0-9]/g, "");
+  const phone = DOM.resInputPhone.value.trim();
+
+  if (!name) {
+    showToast("예약자 성함을 입력해주세요.", "error");
+    return;
+  }
+  if (birth.length !== 8) {
+    showToast("생년월일 8자리(예: 19900101)를 정확히 입력해주세요.", "error");
+    return;
+  }
+  if (!phone) {
+    showToast("연락처를 입력해주세요.", "error");
+    return;
+  }
+
+  // 중복 예약 방지 확인
+  const allRes = await dbGetReservations();
+  const alreadyBooked = allRes.some(r => r.date === calSelectedDate && r.time === calSelectedTime && (r.status === "Pending" || r.status === "Confirmed" || !r.status));
+  if (alreadyBooked) {
+    showToast("해당 시간은 이미 다른 내담자의 예약이 완료되었습니다.", "error");
+    closeReservationModal();
+    const selectedDateParts = calSelectedDate.split("-");
+    const dayOfWeek = new Date(parseInt(selectedDateParts[0]), parseInt(selectedDateParts[1]) - 1, parseInt(selectedDateParts[2])).getDay();
+    renderTimeSlots(calSelectedDate, dayOfWeek);
+    return;
+  }
+
+  try {
+    const reservationData = {
+      name,
+      birthDate: birth,
+      phone,
+      date: calSelectedDate,
+      time: calSelectedTime
+    };
+
+    await dbAddReservation(name, birth, phone, calSelectedDate, calSelectedTime);
+    
+    // 텔레그램 봇으로 실시간 예약 정보 자동 전송 (비동기)
+    sendTelegramReservationNotification(reservationData).catch(err => {
+      console.warn("텔레그램 알림 비동기 전송 처리:", err);
+    });
+
+    showToast("예약 신청이 완료되었습니다.", "success");
+    closeReservationModal();
+
+    // 시간표 다시 렌더링하여 해당 슬롯을 빨간색으로 갱신
+    const selectedDateParts = calSelectedDate.split("-");
+    const dayOfWeek = new Date(parseInt(selectedDateParts[0]), parseInt(selectedDateParts[1]) - 1, parseInt(selectedDateParts[2])).getDay();
+    renderTimeSlots(calSelectedDate, dayOfWeek);
+  } catch (error) {
+    console.error(error);
+    showToast("예약 처리 중 오류가 발생했습니다. 다시 시도해 주세요.", "error");
+  }
+}
+
+// ============================================================================
+// 기간 검색 커스텀 2회 클릭 달력 모달 (시작일 -> 종료일)
+// ============================================================================
+let drTarget = "clients"; // "clients" or "reservations"
+let drViewYear = 2026;
+let drViewMonth = 9; // 0-indexed (9 = 10월)
+let drSelectedStart = null; // "YYYY-MM-DD"
+let drSelectedEnd = null;   // "YYYY-MM-DD"
+let drHoverDate = null;     // 마우스 호버 일자 (미리보기)
+let drStep = 1;             // 1: 시작일 선택 대기, 2: 종료일 선택 대기
+
+let clientDateRange = { start: null, end: null };
+let resDateRange = { start: null, end: null };
+
+// 예약 관리 테이블 정렬 상태
+let resSortField = "datetime"; // "datetime" | "created"
+let resSortOrder = "desc";     // "desc" | "asc"
+
+function openDateRangeModal(target) {
+  drTarget = target;
+  const modal = document.getElementById("daterange-picker-modal");
+  const titleEl = document.getElementById("dr-target-title");
+  
+  if (target === "clients") {
+    if (titleEl) titleEl.textContent = "내담자 등록일 기간 검색";
+    drSelectedStart = clientDateRange.start;
+    drSelectedEnd = clientDateRange.end;
+  } else {
+    if (titleEl) titleEl.textContent = "상담 예약일 기간 검색";
+    drSelectedStart = resDateRange.start;
+    drSelectedEnd = resDateRange.end;
+  }
+
+  // 시작일이 이미 있으면 그 달로, 없으면 2026년 10월로 기본 설정
+  if (drSelectedStart) {
+    const parts = drSelectedStart.split("-");
+    drViewYear = parseInt(parts[0], 10);
+    drViewMonth = parseInt(parts[1], 10) - 1;
+  } else {
+    drViewYear = 2026;
+    drViewMonth = 9; // 10월
+  }
+
+  drStep = 1;
+  drHoverDate = null;
+  updateDateRangeStatus();
+  renderDateRangePresets();
+  renderDateRangeCalendar();
+
+  if (modal) modal.classList.remove("hidden");
+}
+
+function closeDateRangeModal() {
+  const modal = document.getElementById("daterange-picker-modal");
+  if (modal) modal.classList.add("hidden");
+}
+
+function updateDateRangeStatus() {
+  const statusMsg = document.getElementById("dr-status-message");
+  const dispStart = document.getElementById("dr-display-start");
+  const dispEnd = document.getElementById("dr-display-end");
+
+  if (dispStart) {
+    dispStart.textContent = drSelectedStart || "시작일 미선택";
+    dispStart.className = drSelectedStart 
+      ? "px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-300 font-bold" 
+      : "px-2 py-0.5 rounded-md bg-white border border-outline-variant/30 font-semibold text-on-surface-variant";
+  }
+
+  if (dispEnd) {
+    dispEnd.textContent = drSelectedEnd || "종료일 미선택";
+    dispEnd.className = drSelectedEnd 
+      ? "px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-300 font-bold" 
+      : "px-2 py-0.5 rounded-md bg-white border border-outline-variant/30 font-semibold text-on-surface-variant";
+  }
+
+  if (statusMsg) {
+    if (drStep === 1) {
+      if (drSelectedStart && drSelectedEnd) {
+        statusMsg.textContent = "기간 선택 완료 (시작일을 다시 클릭하면 재설정됩니다)";
+      } else {
+        statusMsg.textContent = "시작일을 선택해주세요 (첫 번째 클릭)";
+      }
+    } else if (drStep === 2) {
+      statusMsg.textContent = "종료일을 선택해주세요 (두 번째 클릭)";
+    }
+  }
+}
+
+function updateCalendarHighlight() {
+  const grid = document.getElementById("dr-calendar-grid");
+  if (!grid) return;
+  const buttons = grid.querySelectorAll("button[data-date]");
+  buttons.forEach(btn => {
+    const dateStr = btn.dataset.date;
+    const dayOfWeek = parseInt(btn.dataset.dow, 10);
+    const isStart = drSelectedStart === dateStr;
+    const isEnd = drSelectedEnd === dateStr;
+    const isInRange = drSelectedStart && drSelectedEnd && dateStr > drSelectedStart && dateStr < drSelectedEnd;
+    
+    let isHoverRange = false;
+    if (drStep === 2 && drSelectedStart && !drSelectedEnd && drHoverDate) {
+      if (drHoverDate >= drSelectedStart) {
+        isHoverRange = (dateStr > drSelectedStart && dateStr <= drHoverDate);
+      } else {
+        isHoverRange = (dateStr >= drHoverDate && dateStr < drSelectedStart);
+      }
+    }
+
+    let baseClass = "w-full py-1.5 rounded-lg text-xs font-medium transition-all relative cursor-pointer select-none";
+    if (isStart && isEnd) {
+      btn.className = `${baseClass} bg-primary text-white font-bold shadow-sm`;
+    } else if (isStart) {
+      btn.className = `${baseClass} bg-primary text-white font-bold rounded-r-none shadow-sm`;
+    } else if (isEnd) {
+      btn.className = `${baseClass} bg-primary text-white font-bold rounded-l-none shadow-sm`;
+    } else if (isInRange || isHoverRange) {
+      btn.className = `${baseClass} bg-primary/15 text-primary font-semibold rounded-none`;
+    } else {
+      if (dayOfWeek === 0) btn.className = `${baseClass} text-red-500 hover:bg-surface-container-high`;
+      else if (dayOfWeek === 6) btn.className = `${baseClass} text-blue-500 hover:bg-surface-container-high`;
+      else btn.className = `${baseClass} text-on-surface hover:bg-surface-container-high`;
+    }
+  });
+}
+
+function renderDateRangeCalendar() {
+  const grid = document.getElementById("dr-calendar-grid");
+  const title = document.getElementById("dr-month-title");
+  if (!grid || !title) return;
+
+  title.textContent = `${drViewYear}년 ${drViewMonth + 1}월`;
+  grid.innerHTML = "";
+
+  const firstDay = new Date(drViewYear, drViewMonth, 1).getDay();
+  const daysInMonth = new Date(drViewYear, drViewMonth + 1, 0).getDate();
+  const prevMonthDays = new Date(drViewYear, drViewMonth, 0).getDate();
+
+  // 이전 달 빈칸 채우기
+  for (let i = firstDay - 1; i >= 0; i--) {
+    const dayNum = prevMonthDays - i;
+    const cell = document.createElement("div");
+    cell.className = "py-1.5 text-on-surface-variant/30 text-[11px] select-none";
+    cell.textContent = dayNum;
+    grid.appendChild(cell);
+  }
+
+  // 이번 달 일자 채우기
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${drViewYear}-${String(drViewMonth + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    const dayOfWeek = new Date(drViewYear, drViewMonth, d).getDay();
+    
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.dataset.date = dateStr;
+    btn.dataset.dow = dayOfWeek;
+    btn.textContent = d;
+
+    // 마우스 오버 시 범위 미리보기 (DOM을 파괴하지 않고 클래스만 갱신하여 클릭 방해 방지)
+    btn.addEventListener("mouseenter", () => {
+      if (drStep === 2 && drSelectedStart) {
+        drHoverDate = dateStr;
+        updateCalendarHighlight();
+      }
+    });
+
+    // 날짜 클릭 이벤트 (2회 클릭 로직: 1차=시작일, 2차=종료일)
+    const handleDateSelect = (e) => {
+      if (e) e.preventDefault();
+      if (drStep === 1) {
+        drSelectedStart = dateStr;
+        drSelectedEnd = null;
+        drStep = 2;
+        updateDateRangeStatus();
+        updateCalendarHighlight();
+      } else if (drStep === 2) {
+        if (dateStr < drSelectedStart) {
+          drSelectedEnd = drSelectedStart;
+          drSelectedStart = dateStr;
+        } else {
+          drSelectedEnd = dateStr;
+        }
+        drStep = 1;
+        drHoverDate = null;
+        updateDateRangeStatus();
+        updateCalendarHighlight();
+      }
+    };
+
+    btn.addEventListener("click", handleDateSelect);
+    grid.appendChild(btn);
+  }
+
+  // 그리드 밖으로 마우스가 나갔을 때 호버 하이라이트 정리
+  grid.addEventListener("mouseleave", () => {
+    if (drStep === 2) {
+      drHoverDate = null;
+      updateCalendarHighlight();
+    }
+  });
+
+  updateCalendarHighlight();
+}
+
+function renderDateRangePresets() {
+  const container = document.getElementById("dr-presets-container");
+  if (!container) return;
+
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+  let presets = [];
+  if (drTarget === "clients") {
+    const d7 = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
+    const d7Str = `${d7.getFullYear()}-${String(d7.getMonth() + 1).padStart(2, "0")}-${String(d7.getDate()).padStart(2, "0")}`;
+    const m1 = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+    const m1Str = `${m1.getFullYear()}-${String(m1.getMonth() + 1).padStart(2, "0")}-${String(m1.getDate()).padStart(2, "0")}`;
+    const m3 = new Date(today.getFullYear(), today.getMonth() - 3, today.getDate());
+    const m3Str = `${m3.getFullYear()}-${String(m3.getMonth() + 1).padStart(2, "0")}-${String(m3.getDate()).padStart(2, "0")}`;
+
+    presets = [
+      { label: "전체 기간", start: null, end: null },
+      { label: "오늘", start: todayStr, end: todayStr },
+      { label: "최근 7일", start: d7Str, end: todayStr },
+      { label: "최근 1개월", start: m1Str, end: todayStr },
+      { label: "최근 3개월", start: m3Str, end: todayStr }
+    ];
+  } else {
+    presets = [
+      { label: "전체 기간", start: null, end: null },
+      { label: "오늘", start: todayStr, end: todayStr },
+      { label: "10월 전체", start: "2026-10-01", end: "2026-10-31" },
+      { label: "11월 전체", start: "2026-11-01", end: "2026-11-30" },
+      { label: "10~11월 (2개월)", start: "2026-10-01", end: "2026-11-30" }
+    ];
+  }
+
+  container.innerHTML = "";
+  presets.forEach(p => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "px-2 py-1 rounded-md text-[11px] bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-medium transition-colors cursor-pointer";
+    btn.textContent = p.label;
+    btn.addEventListener("click", () => {
+      drSelectedStart = p.start;
+      drSelectedEnd = p.end;
+      drStep = 1;
+      drHoverDate = null;
+      if (p.start) {
+        const parts = p.start.split("-");
+        drViewYear = parseInt(parts[0], 10);
+        drViewMonth = parseInt(parts[1], 10) - 1;
+      }
+      applyDateRangeModal();
+    });
+    container.appendChild(btn);
+  });
+}
+
+function applyDateRangeModal() {
+  if (drTarget === "clients") {
+    clientDateRange.start = drSelectedStart;
+    clientDateRange.end = drSelectedEnd;
+    const label = document.getElementById("client-daterange-label");
+    if (label) {
+      if (!drSelectedStart && !drSelectedEnd) {
+        label.textContent = "전체 기간";
+      } else if (drSelectedStart && drSelectedEnd) {
+        label.textContent = `${drSelectedStart} ~ ${drSelectedEnd}`;
+      } else {
+        label.textContent = `${drSelectedStart || drSelectedEnd} 이후`;
+      }
+    }
+    renderClientDirectory();
+  } else {
+    resDateRange.start = drSelectedStart;
+    resDateRange.end = drSelectedEnd;
+    const label = document.getElementById("res-daterange-label");
+    if (label) {
+      if (!drSelectedStart && !drSelectedEnd) {
+        label.textContent = "전체 기간";
+      } else if (drSelectedStart && drSelectedEnd) {
+        label.textContent = `${drSelectedStart} ~ ${drSelectedEnd}`;
+      } else {
+        label.textContent = `${drSelectedStart || drSelectedEnd} 이후`;
+      }
+    }
+    renderReservationManagementList();
+  }
+  closeDateRangeModal();
+}
+
+function clearDateRangeSelection() {
+  drSelectedStart = null;
+  drSelectedEnd = null;
+  drStep = 1;
+  drHoverDate = null;
+  updateDateRangeStatus();
+  renderDateRangeCalendar();
+}
+
+function resetDateRange(target) {
+  if (target === "clients") {
+    clientDateRange.start = null;
+    clientDateRange.end = null;
+    const label = document.getElementById("client-daterange-label");
+    if (label) label.textContent = "전체 기간";
+    renderClientDirectory();
+    showToast("내담자 등록일 필터가 초기화되었습니다.");
+  } else {
+    resDateRange.start = null;
+    resDateRange.end = null;
+    const label = document.getElementById("res-daterange-label");
+    if (label) label.textContent = "전체 기간";
+    renderReservationManagementList();
+    showToast("예약일 필터가 초기화되었습니다.");
+  }
+}
+
+// 칼럼 정렬 토글
+function toggleResSort(field) {
+  if (resSortField === field) {
+    resSortOrder = (resSortOrder === "asc" ? "desc" : "asc");
+  } else {
+    resSortField = field;
+    resSortOrder = "desc";
+  }
+  renderReservationManagementList();
+}
+
+// [탭 2] 관리자 예약 관리 리스트 렌더링
+async function renderReservationManagementList() {
+  // 텔레그램 설정 UI 갱신
+  initTelegramSettingsUI();
+
+  const tbody = document.getElementById("reservation-list-tbody");
+  if (!tbody) return;
+
+  const allRes = await dbGetReservations();
+
+  // 검색 및 필터, 기간 적용 (2회 클릭 달력 모달 resDateRange 연동)
+  const searchInput = document.getElementById("search-reservation");
+  const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
+
+  let filtered = allRes.filter(r => {
+    const status = r.status || "Pending";
+    if (resCurrentStatusFilter !== "all" && status !== resCurrentStatusFilter) {
+      return false;
+    }
+    if (query) {
+      const matchName = (r.name || "").toLowerCase().includes(query);
+      const matchPhone = (r.phone || "").includes(query);
+      const matchDate = (r.date || "").includes(query);
+      if (!matchName && !matchPhone && !matchDate) return false;
+    }
+    if (resDateRange.start || resDateRange.end) {
+      const resDate = r.date; // "YYYY-MM-DD"
+      if (resDateRange.start && resDate < resDateRange.start) return false;
+      if (resDateRange.end && resDate > resDateRange.end) return false;
+    }
+    return true;
+  });
+
+  // 대시보드 통계 지표 갱신 (검색 및 필터 결과 실시간 연동)
+  const totalCount = filtered.length;
+  const pendingCount = filtered.filter(r => r.status === "Pending" || !r.status).length;
+  const confirmedCount = filtered.filter(r => r.status === "Confirmed").length;
+  const cancelledCount = filtered.filter(r => r.status === "Cancelled").length;
+
+  const elTotal = document.getElementById("stat-total-reservations");
+  const elPending = document.getElementById("stat-pending-reservations");
+  const elConfirmed = document.getElementById("stat-confirmed-reservations");
+  const elCancelled = document.getElementById("stat-cancelled-reservations");
+
+  if (elTotal) elTotal.textContent = totalCount;
+  if (elPending) elPending.textContent = pendingCount;
+  if (elConfirmed) elConfirmed.textContent = confirmedCount;
+  if (elCancelled) elCancelled.textContent = cancelledCount;
+
+  // 예약 정렬 적용 (예약 일시 or 신청 일시 / 오름차순 or 내림차순)
+  filtered.sort((a, b) => {
+    if (resSortField === "created") {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return resSortOrder === "asc" ? aTime - bTime : bTime - aTime;
+    } else {
+      // datetime (date + time)
+      const aDt = `${a.date || ""} ${a.time || ""}`;
+      const bDt = `${b.date || ""} ${b.time || ""}`;
+      const comp = aDt.localeCompare(bDt);
+      return resSortOrder === "asc" ? comp : -comp;
+    }
+  });
+
+  // 정렬 아이콘 갱신
+  const iconDt = document.getElementById("icon-sort-res-datetime");
+  const iconCr = document.getElementById("icon-sort-res-created");
+  if (iconDt && iconCr) {
+    if (resSortField === "datetime") {
+      iconDt.textContent = resSortOrder === "asc" ? "arrow_upward" : "arrow_downward";
+      iconDt.className = "material-symbols-outlined text-[16px] text-primary font-bold";
+      iconCr.textContent = "unfold_more";
+      iconCr.className = "material-symbols-outlined text-[16px] text-on-surface-variant/40";
+    } else {
+      iconCr.textContent = resSortOrder === "asc" ? "arrow_upward" : "arrow_downward";
+      iconCr.className = "material-symbols-outlined text-[16px] text-primary font-bold";
+      iconDt.textContent = "unfold_more";
+      iconDt.className = "material-symbols-outlined text-[16px] text-on-surface-variant/40";
+    }
+  }
+
+  // N개씩 보기 적용
+  const pageSizeSelect = document.getElementById("res-page-size");
+  const pageSize = pageSizeSelect ? parseInt(pageSizeSelect.value, 10) : 20;
+  const displayList = filtered.slice(0, pageSize);
+
+  tbody.innerHTML = "";
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="py-12 text-center text-on-surface-variant/40 text-xs">
+          등록되거나 일치하는 상담 예약 내역이 없습니다.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  displayList.forEach(r => {
+    const tr = document.createElement("tr");
+    tr.className = "hover:bg-surface-container-low/40 transition-colors";
+
+    const status = r.status || "Pending";
+    let statusBadge = "";
+    if (status === "Confirmed") {
+      statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>예약 확정</span>`;
+    } else if (status === "Cancelled") {
+      statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200"><span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>취소됨</span>`;
+    } else {
+      statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>신청 대기</span>`;
+    }
+
+    const birthFormatted = (r.birthDate || "").length === 8
+      ? `${r.birthDate.slice(0, 4)}-${r.birthDate.slice(4, 6)}-${r.birthDate.slice(6, 8)}`
+      : (r.birthDate || "-");
+
+    let phoneFormatted = r.phone || "-";
+    if (phoneFormatted !== "-" && !phoneFormatted.includes("-")) {
+      phoneFormatted = phoneFormatted.replace(/(\d{3})(\d{3,4})(\d{4})/, "$1-$2-$3");
+    }
+
+    const createdFormatted = r.createdAt
+      ? new Date(r.createdAt).toLocaleString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })
+      : "-";
+
+    let actionButtons = "";
+    if (status === "Pending") {
+      actionButtons = `
+        <button class="btn-res-confirm px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs shadow-sm transition-all cursor-pointer" data-id="${r.id}">
+          예약 확정
+        </button>
+        <button class="btn-res-cancel px-2.5 py-1 text-xs font-medium text-error hover:bg-error-container/40 rounded-lg transition-all border border-error/20 cursor-pointer" data-id="${r.id}">
+          취소
+        </button>
+      `;
+    } else if (status === "Confirmed") {
+      actionButtons = `
+        <button class="btn-res-cancel px-2.5 py-1 text-xs font-medium text-error hover:bg-error-container/40 rounded-lg transition-all border border-error/20 cursor-pointer" data-id="${r.id}">
+          취소
+        </button>
+      `;
+    } else if (status === "Cancelled") {
+      actionButtons = `
+        <button class="btn-res-confirm px-2.5 py-1 text-xs font-medium text-on-surface-variant hover:bg-surface-container rounded-lg transition-all border border-outline-variant/40 cursor-pointer" data-id="${r.id}">
+          재확정
+        </button>
+      `;
+    }
+
+    tr.innerHTML = `
+      <td class="py-3 px-4 font-bold text-on-surface">
+        <span class="inline-flex items-center gap-1.5 text-primary">
+          <span class="material-symbols-outlined text-[16px]">event</span>
+          ${r.date} ${r.time}
+        </span>
+      </td>
+      <td class="py-3 px-4 font-semibold text-on-surface text-sm">${r.name || '-'}</td>
+      <td class="py-3 px-4 text-on-surface-variant text-sm">${birthFormatted}</td>
+      <td class="py-3 px-4 text-on-surface-variant text-sm">${phoneFormatted}</td>
+      <td class="py-3 px-4 text-on-surface-variant text-sm">${createdFormatted}</td>
+      <td class="py-3 px-4 text-left">${statusBadge}</td>
+      <td class="py-3 px-4 text-left">
+        <div class="flex items-center justify-start gap-1.5">
+          ${actionButtons}
+        </div>
+      </td>
+    `;
+
+    // 확정/재확정 버튼 이벤트
+    const btnConfirm = tr.querySelector(".btn-res-confirm");
+    if (btnConfirm) {
+      btnConfirm.addEventListener("click", async () => {
+        await dbUpdateReservationStatus(r.id, "Confirmed");
+        showToast(`${r.name}님의 예약이 확정되었습니다.`, "success");
+        renderReservationManagementList();
+      });
+    }
+
+    // 취소 버튼 이벤트
+    const btnCancel = tr.querySelector(".btn-res-cancel");
+    if (btnCancel) {
+      btnCancel.addEventListener("click", async () => {
+        if (confirm(`${r.name}님의 상담 예약을 취소 처리하시겠습니까?`)) {
+          await dbUpdateReservationStatus(r.id, "Cancelled");
+          showToast(`${r.name}님의 예약이 취소되었습니다.`, "info");
+          renderReservationManagementList();
+        }
+      });
+    }
+
+    tbody.appendChild(tr);
   });
 }
 
@@ -2879,6 +4237,7 @@ async function initApp() {
     }
   }
 
+  renderReservationCalendar();
   handleRouting();
 }
 

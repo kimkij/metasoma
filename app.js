@@ -2486,13 +2486,16 @@ async function renderClientHistoryTimeline(clientId) {
             <h4 class="font-headline-sm text-headline-sm text-on-surface">${rec.counselingTitle}</h4>
             <span class="font-label-sm text-label-sm text-on-surface-variant">신청 일시: ${dateStr}</span>
           </div>
-          <!-- 진행 상태 조정 및 기록 삭제 영역 -->
+          <!-- 진행 상태 조정 및 기록 인쇄/삭제 영역 -->
           <div class="flex items-center gap-xs">
             <select class="status-changer select-dropdown text-xs bg-white border border-outline-variant/50 rounded-lg pl-2 pr-6 py-1 focus:outline-none" data-record-id="${rec.id}">
               <option value="Pending" ${rec.status === 'Pending' ? 'selected' : ''}>대기중</option>
               <option value="In Progress" ${rec.status === 'In Progress' ? 'selected' : ''}>진행중</option>
               <option value="Completed" ${rec.status === 'Completed' ? 'selected' : ''}>완료</option>
             </select>
+            <button class="btn-print-record p-1 text-on-surface-variant hover:text-primary hover:bg-primary/10 rounded-full transition-colors" data-record-id="${rec.id}" title="상담지 인쇄">
+              <span class="material-symbols-outlined text-[18px]">print</span>
+            </button>
             <button class="btn-delete-record p-1 text-on-surface-variant hover:text-error hover:bg-error-container/20 rounded-full transition-colors" data-record-id="${rec.id}" title="기록 삭제">
               <span class="material-symbols-outlined text-[18px]">delete</span>
             </button>
@@ -2513,6 +2516,14 @@ async function renderClientHistoryTimeline(clientId) {
       renderClientHistoryTimeline(clientId);
     });
 
+    // 상담 이력 카드 인쇄 감지
+    const btnPrint = item.querySelector(".btn-print-record");
+    if (btnPrint) {
+      btnPrint.addEventListener("click", () => {
+        printCounselingRecord(rec, currentDrawerClient, counselingTypes);
+      });
+    }
+
     // 상담 이력 카드 삭제 감지
     item.querySelector(".btn-delete-record").addEventListener("click", async () => {
       if (confirm("이 내담자의 해당 상담 신청 기록을 삭제하시겠습니까?")) {
@@ -2525,6 +2536,136 @@ async function renderClientHistoryTimeline(clientId) {
 
     DOM.drawerHistoryList.appendChild(item);
   });
+}
+
+// 상담 설문지 답변 내역 인쇄 팝업/프린트 처리
+function printCounselingRecord(rec, client, counselingTypes) {
+  const clientName = (client && client.name) || rec.clientName || "내담자";
+  const rawBirth = (client && client.birthDate) || rec.clientBirthDate || "";
+  const clientBirth = rawBirth.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3");
+  const clientPhone = (client && client.phone) || "-";
+  const dateStr = new Date(rec.submittedAt).toLocaleString("ko-KR", {
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hour12: false
+  });
+  const printDateStr = new Date().toLocaleString("ko-KR", {
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hour12: false
+  });
+  const statusKo = rec.status === "Completed" ? "완료" : (rec.status === "In Progress" ? "진행중" : "대기중");
+
+  // 질문 및 답변 포맷팅
+  let qHtml = "";
+  if (rec.answers && rec.answers.length > 0) {
+    qHtml = rec.answers.map((ans, idx) => {
+      let displayAnswer = ans.answer || "(미답변)";
+      const cType = (counselingTypes || []).find(t => t.id === rec.counselingTypeId);
+      if (cType && cType.questions) {
+        const matchedQ = cType.questions.find(q => q.title === ans.question);
+        if (matchedQ && matchedQ.type === "choice" && matchedQ.options) {
+          if (/^[1-9]\d*$/.test(displayAnswer)) {
+            const optIdx = parseInt(displayAnswer) - 1;
+            if (matchedQ.options[optIdx]) {
+              displayAnswer = `${displayAnswer}. ${matchedQ.options[optIdx]}`;
+            }
+          } else {
+            const optIdx = matchedQ.options.indexOf(displayAnswer);
+            if (optIdx !== -1) {
+              displayAnswer = `${optIdx + 1}. ${displayAnswer}`;
+            }
+          }
+        }
+      }
+
+      return `
+        <div style="margin-bottom: 14px; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 8px; background-color: #f8fafc; page-break-inside: avoid;">
+          <div style="font-weight: bold; font-size: 13px; color: #2d5a27; margin-bottom: 6px;">
+            Q${idx + 1}. ${ans.question}
+          </div>
+          <div style="font-size: 12.5px; color: #1e293b; background: #ffffff; padding: 10px 12px; border-radius: 6px; border-left: 3px solid #3b7c32; white-space: pre-wrap; line-height: 1.5;">${displayAnswer}</div>
+        </div>
+      `;
+    }).join("");
+  } else {
+    qHtml = `<div style="text-align: center; color: #94a3b8; padding: 24px;">작성된 답변 내역이 없습니다.</div>`;
+  }
+
+  const printContent = `
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+      <meta charset="UTF-8">
+      <title>${clientName}_${rec.counselingTitle}_답변내역</title>
+      <style>
+        @page { size: A4; margin: 15mm; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", "맑은 고딕", helvetica, sans-serif; color: #0f172a; margin: 0; padding: 16px; font-size: 13px; line-height: 1.4; }
+        .header { border-bottom: 2px solid #2d5a27; padding-bottom: 10px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .title { font-size: 19px; font-weight: bold; color: #2d5a27; margin: 0; }
+        .subtitle { font-size: 12px; color: #64748b; margin-top: 3px; }
+        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+        .info-table th { width: 15%; background-color: #f1f5f9; padding: 7px 10px; border: 1px solid #cbd5e1; font-weight: 600; text-align: left; font-size: 11.5px; }
+        .info-table td { width: 35%; padding: 7px 10px; border: 1px solid #cbd5e1; font-size: 12px; }
+        .section-title { font-size: 14px; font-weight: bold; color: #0f172a; margin: 14px 0 8px 0; border-left: 3px solid #2d5a27; padding-left: 7px; }
+        .footer { margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 6px; text-align: right; font-size: 11px; color: #94a3b8; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div>
+          <h1 class="title">메타소마 미술치료</h1>
+          <div class="subtitle">상담 설문 답변 기록표 · ${rec.counselingTitle}</div>
+        </div>
+        <div style="text-align: right; font-size: 11px; color: #64748b;">
+          진행상태: <b style="color: #2d5a27;">${statusKo}</b>
+        </div>
+      </div>
+
+      <table class="info-table">
+        <tr>
+          <th>내담자명</th>
+          <td><b>${clientName}</b></td>
+          <th>생년월일</th>
+          <td>${clientBirth}</td>
+        </tr>
+        <tr>
+          <th>연락처</th>
+          <td>${clientPhone}</td>
+          <th>신청일시</th>
+          <td>${dateStr}</td>
+        </tr>
+      </table>
+
+      <div class="section-title">상담 설문 답변 상세</div>
+      ${qHtml}
+
+      <div class="footer">
+        출력일시: ${printDateStr} | 메타소마 미술치료 CRM
+      </div>
+    </body>
+    </html>
+  `;
+
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "none";
+  document.body.appendChild(iframe);
+
+  const doc = iframe.contentWindow.document;
+  doc.open();
+  doc.write(printContent);
+  doc.close();
+
+  iframe.contentWindow.focus();
+  setTimeout(() => {
+    iframe.contentWindow.print();
+    setTimeout(() => {
+      document.body.removeChild(iframe);
+    }, 1000);
+  }, 300);
 }
 
 async function renderClientNotesList(clientId) {

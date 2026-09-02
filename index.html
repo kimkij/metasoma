@@ -168,121 +168,126 @@
     <!-- =======================================================================
          1. 내담자 로그인 화면 (design/_1/code.html)
          ======================================================================= -->
-    <section id="client-login-view"
-      class="relative min-h-screen w-full flex items-center justify-center p-4 md:p-8 lg:p-12 bg-[#e0ecdb]">
-      <main class="w-full max-w-6xl flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-12 py-8">
-        <!-- 왼쪽: 로그인 카드 영역 -->
-        <div class="w-full max-w-md flex flex-col justify-center shrink-0">
-          <!-- 로고 / 브랜드 영역 -->
-          <div class="flex flex-col items-center justify-center mb-lg space-y-md">
+         <main class="w-full max-w-6xl flex flex-col items-center justify-center gap-6 py-4 md:py-8">
+        <div class="w-full flex flex-col lg:flex-row items-center lg:items-start justify-center gap-8 lg:gap-12">
+          <!-- 왼쪽: 로그인 카드 영역 -->
+          <div class="w-full max-w-md flex flex-col justify-center shrink-0">
+            <!-- 로고 / 브랜드 영역 -->
+            <div class="flex flex-col items-center justify-center mb-lg space-y-md">
+              <div
+                class="w-28 h-28 rounded-2xl bg-white shadow-sm flex items-center justify-center p-2.5 border border-outline-variant/20 overflow-hidden">
+                <img src="logo.png" alt="메타소마 미술치료 연구소 로고" class="w-full h-full object-contain" />
+              </div>
+              <div class="text-center space-y-xs">
+                <h1 class="font-headline-lg text-headline-lg text-on-surface">메타소마 미술치료 연구소</h1>
+                <p class="font-body-md text-body-md text-on-surface-variant">몸과 마음을 함께 이해하는 심리상담</p>
+              </div>
+            </div>
+
+            <!-- 로그인 카드 -->
             <div
-              class="w-28 h-28 rounded-2xl bg-white shadow-sm flex items-center justify-center p-2.5 border border-outline-variant/20 overflow-hidden">
-              <img src="logo.png" alt="메타소마 미술치료 연구소 로고" class="w-full h-full object-contain" />
-            </div>
-            <div class="text-center space-y-xs">
-              <h1 class="font-headline-lg text-headline-lg text-on-surface">메타소마 미술치료 연구소</h1>
-              <p class="font-body-md text-body-md text-on-surface-variant">몸과 마음을 함께 이해하는 심리상담</p>
+              class="bg-surface-container-lowest/85 backdrop-blur-md rounded-2xl shadow-md p-md border border-outline-variant/30 flex flex-col space-y-md">
+              <form class="flex flex-col space-y-sm" id="form-client-login" onsubmit="return false;">
+                <!-- 성명 -->
+                <div class="flex flex-col space-y-xs relative">
+                  <label class="font-label-md text-label-md text-on-surface" for="login-name">성명</label>
+                  <div class="relative">
+                    <span
+                      class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant/50 pointer-events-none">person</span>
+                    <input
+                      class="w-full bg-surface/50 border border-outline-variant/50 rounded-lg py-sm pl-[40px] pr-sm font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-on-surface-variant/40"
+                      id="login-name" placeholder="성함을 입력하세요 (예: 홍길동)" required type="text" autocomplete="name">
+                  </div>
+                </div>
+
+                <!-- 생년월일 -->
+                <div class="flex flex-col space-y-xs relative">
+                  <label class="font-label-md text-label-md text-on-surface" for="login-birth">생년월일</label>
+                  <div class="relative">
+                    <span
+                      class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant/50 pointer-events-none">calendar_month</span>
+                    <input
+                      class="w-full bg-surface/50 border border-outline-variant/50 rounded-lg py-sm pl-[40px] pr-sm font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-on-surface-variant/40"
+                      id="login-birth" placeholder="생년월일 8자리 (예: 19900101)" required type="text" autocomplete="bday">
+                  </div>
+                  <p class="font-body-sm text-xs text-on-surface-variant/70 text-right mt-0.5">예: 1990-01-01 (대시 자동 입력)</p>
+                </div>
+
+                <button
+                  class="mt-md w-full bg-primary text-on-primary font-label-md text-label-md py-sm rounded-full shadow-sm hover:bg-surface-tint hover:shadow-md transition-all active:scale-[0.98] flex items-center justify-center space-x-2"
+                  type="submit">
+                  <span>로그인 / 상담 신청 시작</span>
+                  <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                </button>
+              </form>
+
+              <div class="pt-xs border-t border-outline-variant/20 flex items-center justify-center text-label-sm font-label-sm text-on-surface-variant text-center">
+                <span class="text-xs text-on-surface-variant/70">상담소에 사전 등록된 성명과 생년월일로 접속하실 수 있습니다.</span>
+              </div>
             </div>
           </div>
 
-          <!-- 로그인 카드 -->
-          <div
-            class="bg-surface-container-lowest/85 backdrop-blur-md rounded-2xl shadow-md p-md border border-outline-variant/30 flex flex-col space-y-md">
-            <form class="flex flex-col space-y-sm" id="form-client-login" onsubmit="return false;">
-              <!-- 성명 -->
-              <div class="flex flex-col space-y-xs relative">
-                <label class="font-label-md text-label-md text-on-surface" for="login-name">성명</label>
-                <div class="relative">
-                  <span
-                    class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant/50 pointer-events-none">person</span>
-                  <input
-                    class="w-full bg-surface/50 border border-outline-variant/50 rounded-lg py-sm pl-[40px] pr-sm font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-on-surface-variant/40"
-                    id="login-name" placeholder="성함을 입력하세요 (예: 홍길동)" required type="text" autocomplete="name">
+          <!-- 오른쪽: 2개월 상담 예약 달력 영역 (가로 최대 600px) & 하단 안내사항 배너 -->
+          <div class="w-full max-w-[600px] flex flex-col items-center justify-center gap-4">
+            <div class="w-full bg-surface-container-lowest/90 backdrop-blur-md rounded-3xl p-5 md:p-6 shadow-md border border-outline-variant/30 overflow-hidden flex flex-col">
+              <!-- 달력 상단 헤더 -->
+              <div class="flex items-center justify-between mb-3 pb-3 border-b border-outline-variant/20">
+                <div>
+                  <h2 class="text-headline-md font-headline-md text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary text-[24px]">calendar_month</span>
+                    상담 예약 신청
+                  </h2>
+                  <p class="text-body-sm text-xs text-on-surface-variant mt-0.5">원하는 일시를 선택해 예약해주세요. 확인 전화 후 예약이 확정됩니다.</p>
+                </div>
+                <div class="flex items-center gap-1.5 bg-surface-container-low px-2 py-1 rounded-xl border border-outline-variant/30">
+                  <button type="button" id="cal-prev-btn" class="p-1 rounded-lg hover:bg-surface-container-high transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-on-surface">
+                    <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+                  </button>
+                  <span id="cal-month-title" class="font-bold text-on-surface text-sm min-w-[84px] text-center">2026년 10월</span>
+                  <button type="button" id="cal-next-btn" class="p-1 rounded-lg hover:bg-surface-container-high transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-on-surface">
+                    <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+                  </button>
                 </div>
               </div>
 
-              <!-- 생년월일 -->
-              <div class="flex flex-col space-y-xs relative">
-                <label class="font-label-md text-label-md text-on-surface" for="login-birth">생년월일</label>
-                <div class="relative">
-                  <span
-                    class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant/50 pointer-events-none">calendar_month</span>
-                  <input
-                    class="w-full bg-surface/50 border border-outline-variant/50 rounded-lg py-sm pl-[40px] pr-sm font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-on-surface-variant/40"
-                    id="login-birth" placeholder="생년월일 8자리 (예: 19900101)" required type="text" autocomplete="bday">
+              <!-- 요일 표시 (일 ~ 토) -->
+              <div class="grid grid-cols-7 gap-1 text-center font-bold text-xs text-on-surface-variant mb-2">
+                <div class="text-red-500 py-1">일</div>
+                <div class="text-gray-400 py-1">월(휴)</div>
+                <div class="text-on-surface py-1">화</div>
+                <div class="text-on-surface py-1">수</div>
+                <div class="text-on-surface py-1">목</div>
+                <div class="text-on-surface py-1">금</div>
+                <div class="text-blue-500 py-1">토</div>
+              </div>
+
+              <!-- 일자 그리드 -->
+              <div id="cal-days-grid" class="grid grid-cols-7 gap-1 mb-4">
+                <!-- JS 동적 생성 -->
+              </div>
+
+              <!-- 시간 슬롯 선택 섹션 -->
+              <div class="border-t border-outline-variant/20 pt-3">
+                <div class="flex items-center justify-between mb-2.5">
+                  <span class="font-bold text-xs md:text-sm text-on-surface flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-primary inline-block"></span>
+                    <span id="cal-selected-date-text">날짜를 선택해 주세요</span>
+                  </span>
+                  <div class="flex items-center gap-2.5 text-[11px] text-on-surface-variant font-medium">
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-emerald-500 inline-block"></span>예약가능</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-red-500 inline-block"></span>예약완료</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-gray-300 inline-block"></span>휴무</span>
+                  </div>
                 </div>
-                <p class="font-body-sm text-xs text-on-surface-variant/70 text-right mt-0.5">예: 1990-01-01 (대시 자동 입력)</p>
-              </div>
-
-              <button
-                class="mt-md w-full bg-primary text-on-primary font-label-md text-label-md py-sm rounded-full shadow-sm hover:bg-surface-tint hover:shadow-md transition-all active:scale-[0.98] flex items-center justify-center space-x-2"
-                type="submit">
-                <span>로그인 / 상담 신청 시작</span>
-                <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
-              </button>
-            </form>
-
-            <div class="pt-xs border-t border-outline-variant/20 flex items-center justify-center text-label-sm font-label-sm text-on-surface-variant text-center">
-              <span class="text-xs text-on-surface-variant/70">상담소에 사전 등록된 성명과 생년월일로 접속하실 수 있습니다.</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 오른쪽: 2개월 상담 예약 달력 영역 (가로 최대 600px) -->
-        <div class="w-full max-w-[600px] flex flex-col items-center justify-center">
-          <div class="w-full bg-surface-container-lowest/90 backdrop-blur-md rounded-3xl p-5 md:p-6 shadow-md border border-outline-variant/30 overflow-hidden flex flex-col">
-            <!-- 달력 상단 헤더 -->
-            <div class="flex items-center justify-between mb-3 pb-3 border-b border-outline-variant/20">
-              <div>
-                <h2 class="text-headline-md font-headline-md text-on-surface flex items-center gap-2">
-                  <span class="material-symbols-outlined text-primary text-[24px]">calendar_month</span>
-                  상담 예약 신청
-                </h2>
-                <p class="text-body-sm text-xs text-on-surface-variant mt-0.5">원하는 일시를 선택해 예약해주세요. 확인 전화 후 예약이 확정됩니다.</p>
-              </div>
-              <div class="flex items-center gap-1.5 bg-surface-container-low px-2 py-1 rounded-xl border border-outline-variant/30">
-                <button type="button" id="cal-prev-btn" class="p-1 rounded-lg hover:bg-surface-container-high transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-on-surface">
-                  <span class="material-symbols-outlined text-[18px]">chevron_left</span>
-                </button>
-                <span id="cal-month-title" class="font-bold text-on-surface text-sm min-w-[84px] text-center">2026년 10월</span>
-                <button type="button" id="cal-next-btn" class="p-1 rounded-lg hover:bg-surface-container-high transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-on-surface">
-                  <span class="material-symbols-outlined text-[18px]">chevron_right</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- 요일 표시 (일 ~ 토) -->
-            <div class="grid grid-cols-7 gap-1 text-center font-bold text-xs text-on-surface-variant mb-2">
-              <div class="text-red-500 py-1">일</div>
-              <div class="text-gray-400 py-1">월(휴)</div>
-              <div class="text-on-surface py-1">화</div>
-              <div class="text-on-surface py-1">수</div>
-              <div class="text-on-surface py-1">목</div>
-              <div class="text-on-surface py-1">금</div>
-              <div class="text-blue-500 py-1">토</div>
-            </div>
-
-            <!-- 일자 그리드 -->
-            <div id="cal-days-grid" class="grid grid-cols-7 gap-1 mb-4">
-              <!-- JS 동적 생성 -->
-            </div>
-
-            <!-- 시간 슬롯 선택 섹션 -->
-            <div class="border-t border-outline-variant/20 pt-3">
-              <div class="flex items-center justify-between mb-2.5">
-                <span class="font-bold text-xs md:text-sm text-on-surface flex items-center gap-1.5">
-                  <span class="w-2.5 h-2.5 rounded-full bg-primary inline-block"></span>
-                  <span id="cal-selected-date-text">날짜를 선택해 주세요</span>
-                </span>
-                <div class="flex items-center gap-2.5 text-[11px] text-on-surface-variant font-medium">
-                  <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-emerald-500 inline-block"></span>예약가능</span>
-                  <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-red-500 inline-block"></span>예약완료</span>
-                  <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-gray-300 inline-block"></span>휴무</span>
+                <div id="cal-time-slots-container" class="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-[175px] overflow-y-auto pr-1">
+                  <!-- 시간 슬롯 버튼 동적 생성 -->
                 </div>
               </div>
-              <div id="cal-time-slots-container" class="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-[175px] overflow-y-auto pr-1">
-                <!-- 시간 슬롯 버튼 동적 생성 -->
-              </div>
+            </div>
+
+            <!-- 캘린더 하단: 안내사항 / 상담 및 예약 문의 / 네이버 플레이스 안내 배너 이미지 -->
+            <div class="w-full bg-white/95 backdrop-blur-md rounded-2xl shadow-sm border border-outline-variant/30 p-2 overflow-hidden flex items-center justify-center hover:shadow-md transition-shadow">
+              <img src="schedule-info.png" alt="메타소마 상담 안내사항, 예약 문의 및 네이버 플레이스 바로가기" class="w-full h-auto object-contain rounded-xl" />
             </div>
           </div>
         </div>

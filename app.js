@@ -1191,7 +1191,18 @@ function applyAdminPermissions(adminUser) {
     }
   }
 
-  // 2. 관리자 관리 메뉴: 일반 관리자는 숨김
+  // 2. 텔레그램 알림 메뉴: 일반 관리자는 숨김
+  if (DOM.navTelegram) {
+    if (isSuper) {
+      DOM.navTelegram.classList.remove("hidden");
+      DOM.navTelegram.style.display = "";
+    } else {
+      DOM.navTelegram.classList.add("hidden");
+      DOM.navTelegram.style.display = "none";
+    }
+  }
+
+  // 3. 관리자 관리 메뉴: 일반 관리자는 숨김
   if (DOM.navManagers) {
     if (isSuper) {
       DOM.navManagers.classList.remove("hidden");
@@ -1202,7 +1213,7 @@ function applyAdminPermissions(adminUser) {
     }
   }
 
-  // 3. 내담자 등록 버튼: 일반 관리자는 숨김
+  // 4. 내담자 등록 버튼: 일반 관리자는 숨김
   if (DOM.btnOpenRegisterModal) {
     if (isSuper) {
       DOM.btnOpenRegisterModal.classList.remove("hidden");
@@ -1213,7 +1224,7 @@ function applyAdminPermissions(adminUser) {
     }
   }
 
-  // 4. 내담자 삭제 버튼: 일반 관리자는 숨김
+  // 5. 내담자 삭제 버튼: 일반 관리자는 숨김
   const btnDeleteClient = document.getElementById("btn-delete-client");
   if (btnDeleteClient) {
     if (isSuper) {
@@ -1254,7 +1265,7 @@ function handleRouting() {
     const adminUser = getCurrentAdminUser();
     
     // 일반 관리자의 최고 관리자 전용 메뉴 접근 차단
-    if (adminUser.role === "general" && (hash === "#/admin/administration" || hash === "#/admin/managers")) {
+    if (adminUser.role === "general" && (hash === "#/admin/administration" || hash === "#/admin/telegram" || hash === "#/admin/managers")) {
       showToast("접근 권한이 없습니다. (최고 관리자 전용 메뉴)", "error");
       window.location.hash = "#/admin/customerlist";
       return;
@@ -1751,6 +1762,8 @@ async function submitQuestionnaireAnswers(e) {
   }
 
   try {
+    const counselingTitle = selectedCounselingType ? selectedCounselingType.title : "상담 설문지";
+
     if (currentRecordId) {
       await dbSubmitRecordAnswers(currentRecordId, answers);
     } else {
@@ -1763,6 +1776,16 @@ async function submitQuestionnaireAnswers(e) {
         answers
       );
     }
+
+    // 텔레그램 알림 전송: 이름, 생년월일, 상담지 제목, '상담지 작성을 완료했습니다.'
+    sendTelegramQuestionnaireNotification({
+      name: currentClient.name,
+      birthDate: currentClient.birthDate,
+      counselingTitle: counselingTitle
+    }).catch(err => {
+      console.warn("상담지 작성 완료 텔레그램 알림 전송 오류:", err);
+    });
+
     showView("client-success");
   } catch (error) {
     console.error(error);
@@ -3423,6 +3446,72 @@ async function sendTelegramReservationNotification(reservation, customChatId = n
     return anySuccess;
   } catch (err) {
     console.error("텔레그램 알림 발송 중 전체 오류:", err);
+    return false;
+  }
+}
+
+// 텔레그램 봇으로 상담지 작성 완료 알림 전송
+async function sendTelegramQuestionnaireNotification(data) {
+  try {
+    const rawChatId = await dbGetTelegramChatId();
+    if (!rawChatId) {
+      console.warn("ℹ️ 텔레그램 Chat ID가 설정되지 않아 상담지 완료 알림 발송을 건너뜁니다.");
+      return false;
+    }
+
+    const chatIds = rawChatId
+      .split(/[,\s\n]+/)
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    if (chatIds.length === 0) return false;
+
+    const birthFormatted = (data.birthDate || "").length === 8
+      ? `${data.birthDate.slice(0, 4)}-${data.birthDate.slice(4, 6)}-${data.birthDate.slice(6, 8)}`
+      : (data.birthDate || "-");
+
+    const nowStr = new Date().toLocaleString("ko-KR", {
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", hour12: false
+    });
+
+    const messageText = 
+      `📝 <b>[메타소마 미술치료] 상담 설문지 작성 완료</b>\n\n` +
+      `👤 <b>이름:</b> ${data.name}\n` +
+      `🎂 <b>생년월일:</b> ${birthFormatted}\n` +
+      `📋 <b>상담지 제목:</b> ${data.counselingTitle}\n` +
+      `⏱ <b>작성일시:</b> ${nowStr}\n\n` +
+      `<b>상담지 작성을 완료했습니다.</b>\n` +
+      `<i>※ 관리자 페이지 내담자 상세 기록에서 작성된 답변을 확인하실 수 있습니다.</i>`;
+
+    let anySuccess = false;
+
+    for (const cid of chatIds) {
+      try {
+        const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: cid,
+            text: messageText,
+            parse_mode: "HTML"
+          })
+        });
+
+        const resData = await res.json();
+        if (resData.ok === true) {
+          anySuccess = true;
+        } else {
+          console.warn(`상담지 알림 텔레그램 발송 실패 [ChatID: ${cid}]:`, resData.description);
+        }
+      } catch (postErr) {
+        console.error(`상담지 알림 네트워크 에러 [ChatID: ${cid}]:`, postErr);
+      }
+    }
+
+    return anySuccess;
+  } catch (err) {
+    console.error("상담지 작성 완료 텔레그램 알림 발송 중 전체 오류:", err);
     return false;
   }
 }

@@ -3229,7 +3229,7 @@ function registerEventListeners() {
 // 10. 상담 예약 달력 및 예약 신청/관리 로직 + 텔레그램 알림 연동
 // ============================================================================
 const TELEGRAM_BOT_TOKEN = "8852696539:AAFfPbSp5-s2oU2HNkqIilNNxS5oCUWW-w0";
-const INITIAL_DEFAULT_TELEGRAM_CHAT_ID = "8938330961"; // 초기 기본 관리자 Chat ID
+const INITIAL_DEFAULT_TELEGRAM_CHAT_ID = "5318116202, 8938330961"; // 초기 기본 관리자 Chat ID (김일중 대표 & Judy 실장)
 
 // DB 및 로컬 스토리지에서 텔레그램 Chat ID 조회
 async function dbGetTelegramChatId() {

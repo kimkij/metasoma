@@ -3229,7 +3229,7 @@ function registerEventListeners() {
 // 10. 상담 예약 달력 및 예약 신청/관리 로직 + 텔레그램 알림 연동
 // ============================================================================
 const TELEGRAM_BOT_TOKEN = "8852696539:AAFfPbSp5-s2oU2HNkqIilNNxS5oCUWW-w0";
-const INITIAL_DEFAULT_TELEGRAM_CHAT_ID = "5318116202"; // 초기 기본 관리자 Chat ID
+const INITIAL_DEFAULT_TELEGRAM_CHAT_ID = "8938330961"; // 초기 기본 관리자 Chat ID
 
 // DB 및 로컬 스토리지에서 텔레그램 Chat ID 조회
 async function dbGetTelegramChatId() {
@@ -3238,7 +3238,7 @@ async function dbGetTelegramChatId() {
       const doc = await window.db.collection("crm_settings").doc("telegram").get();
       if (doc.exists) {
         const data = doc.data();
-        if (data.chatId !== undefined) {
+        if (data.chatId !== undefined && data.chatId !== "") {
           return data.chatId;
         }
       }
@@ -3248,7 +3248,7 @@ async function dbGetTelegramChatId() {
   }
 
   const stored = localStorage.getItem("crm_telegram_chat_id");
-  if (stored !== null) return stored;
+  if (stored !== null && stored !== "") return stored;
   return INITIAL_DEFAULT_TELEGRAM_CHAT_ID;
 }
 
@@ -3294,7 +3294,8 @@ async function initTelegramSettingsUI() {
 
   if (badgeEl) {
     if (currentChatId) {
-      badgeEl.textContent = "연동 활성";
+      const count = currentChatId.split(/[,\s]+/).filter(Boolean).length;
+      badgeEl.textContent = count > 1 ? `연동 활성 (${count}명 수신)` : "연동 활성";
       badgeEl.className = "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200";
     } else {
       badgeEl.textContent = "미연동 (알림 꺼짐)";
@@ -3348,7 +3349,7 @@ async function testTelegramSettingsUI() {
     name: "홍길동 (테스트 신청자)",
     birthDate: "19950505",
     phone: "010-1234-5678",
-    date: "2026-10-14",
+    date: "2026-09-03",
     time: "14:00"
   };
 
@@ -3356,18 +3357,25 @@ async function testTelegramSettingsUI() {
   if (success) {
     showToast("텔레그램 봇으로 테스트 알림이 성공적으로 전송되었습니다!", "success");
   } else {
-    showToast("발송 실패: 봇(@metasoma_bot)에서 /start를 누르셨는지 또는 ID를 확인해주세요.", "error");
+    showToast("발송 실패: 봇(@metasoma_bot)에서 /start를 누르셨는지 또는 Chat ID를 확인해주세요.", "error");
   }
 }
 
-// 텔레그램 봇으로 예약 정보 전송
+// 텔레그램 봇으로 예약 정보 전송 (단일 또는 쉼표 구분 다중 Chat ID 지원)
 async function sendTelegramReservationNotification(reservation, customChatId = null) {
   try {
-    const chatId = customChatId || await dbGetTelegramChatId();
-    if (!chatId) {
+    const rawChatId = customChatId || await dbGetTelegramChatId();
+    if (!rawChatId) {
       console.warn("ℹ️ 텔레그램 Chat ID가 설정되지 않아 알림 발송을 건너뜁니다.");
       return false;
     }
+
+    const chatIds = rawChatId
+      .split(/[,\s\n]+/)
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    if (chatIds.length === 0) return false;
 
     const birthFormatted = (reservation.birthDate || "").length === 8
       ? `${reservation.birthDate.slice(0, 4)}-${reservation.birthDate.slice(4, 6)}-${reservation.birthDate.slice(6, 8)}`
@@ -3387,20 +3395,34 @@ async function sendTelegramReservationNotification(reservation, customChatId = n
       `⏱ <b>신청일시:</b> ${nowStr}\n\n` +
       `<i>※ 확인 전화 후 관리자 페이지에서 예약을 확정해주세요.</i>`;
 
-    const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: messageText,
-        parse_mode: "HTML"
-      })
-    });
+    let anySuccess = false;
 
-    const data = await res.json();
-    return data.ok === true;
+    for (const cid of chatIds) {
+      try {
+        const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: cid,
+            text: messageText,
+            parse_mode: "HTML"
+          })
+        });
+
+        const data = await res.json();
+        if (data.ok === true) {
+          anySuccess = true;
+        } else {
+          console.warn(`텔레그램 메시지 발송 실패 [ChatID: ${cid}]:`, data.description);
+        }
+      } catch (postErr) {
+        console.error(`텔레그램 발송 네트워크 에러 [ChatID: ${cid}]:`, postErr);
+      }
+    }
+
+    return anySuccess;
   } catch (err) {
-    console.error("텔레그램 알림 발송 중 오류:", err);
+    console.error("텔레그램 알림 발송 중 전체 오류:", err);
     return false;
   }
 }

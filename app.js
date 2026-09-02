@@ -1240,6 +1240,14 @@ function applyAdminPermissions(adminUser) {
 // 해시 변경 감지 및 인가 가드(Guard) 처리
 function handleRouting() {
   if (!window.location.hash) {
+    if (window.location.pathname.includes("/admin/login")) {
+      window.location.hash = "#/admin/login";
+      return;
+    }
+    if (window.location.pathname.includes("/admin")) {
+      window.location.hash = "#/admin/customerlist";
+      return;
+    }
     window.location.hash = "#/login";
     return;
   }
@@ -3236,7 +3244,6 @@ function registerEventListeners() {
 // ============================================================================
 // 10. 상담 예약 달력 및 예약 신청/관리 로직 + 텔레그램 알림 연동
 // ============================================================================
-const TELEGRAM_BOT_TOKEN = "8852696539:AAFfPbSp5-s2oU2HNkqIilNNxS5oCUWW-w0";
 const TELEGRAM_BOT_TOKEN = "8852696539:AAFfPbSp5-s2oU2HNkqIilNNxS5oCUWW-w0";
 const DEFAULT_TELEGRAM_RECEIVERS = [
   { id: "tg_default_1", name: "김일중 대표", chatId: "5318116202", createdAt: 1788308000000 },

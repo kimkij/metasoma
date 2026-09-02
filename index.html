@@ -917,7 +917,7 @@
             <div class="flex items-center justify-between mb-lg">
               <div>
                 <h1 class="font-headline-lg text-headline-lg text-on-surface mb-xs">텔레그램 알림 관리</h1>
-                <p class="font-body-md text-body-md text-on-surface-variant">신규 상담 예약 신청 시 실시간으로 알림을 수신할 텔레그램 설정을 관리합니다.</p>
+                <p class="font-body-md text-body-md text-on-surface-variant">신규 상담 예약 신청 및 설문지 작성 시 실시간으로 알림을 수신할 텔레그램 설정을 관리합니다.</p>
               </div>
             </div>
 
@@ -941,30 +941,55 @@
                 </div>
               </div>
 
-              <!-- Chat ID 설정 폼 -->
+              <!-- Chat ID & 이름 추가 폼 -->
               <div class="space-y-sm">
-                <label class="block font-label-md text-label-md font-semibold text-on-surface" for="setting-telegram-chat-id">
-                  알림 수신 텔레그램 Chat ID (개인 ID 또는 단체 그룹방 ID)
+                <label class="block font-label-md text-label-md font-semibold text-on-surface">
+                  알림 수신자 등록 (이름 및 Chat ID)
                 </label>
-                <div class="flex flex-wrap items-center gap-3">
-                  <input id="setting-telegram-chat-id" type="text" placeholder="Chat ID 입력 (예: 5318116202 또는 -1001234567890)"
-                    class="px-4 py-2.5 text-sm bg-surface-container-low border border-outline-variant/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/40 flex-1 max-w-md text-on-surface font-mono" />
-                  <button id="btn-save-telegram-chat-id" class="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer flex items-center gap-1.5">
-                    <span class="material-symbols-outlined text-[18px]">save</span>
-                    <span>저장</span>
+                <form id="form-add-telegram-receiver" class="flex flex-wrap items-center gap-3">
+                  <input id="setting-telegram-name" type="text" placeholder="담당자 이름 (예: 김일중 대표)"
+                    class="px-4 py-2.5 text-sm bg-surface-container-low border border-outline-variant/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/40 w-48 text-on-surface" required />
+                  <input id="setting-telegram-chat-id" type="text" placeholder="Chat ID (예: 5318116202)"
+                    class="px-4 py-2.5 text-sm bg-surface-container-low border border-outline-variant/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/40 flex-1 min-w-[200px] text-on-surface font-mono" required />
+                  <button type="submit" id="btn-save-telegram-chat-id" class="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[18px]">person_add</span>
+                    <span>수신자 추가</span>
                   </button>
-                  <button id="btn-delete-telegram-chat-id" class="px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5">
-                    <span class="material-symbols-outlined text-[18px]">delete</span>
-                    <span>삭제/연동해제</span>
-                  </button>
-                  <button id="btn-test-telegram-send" class="px-4 py-2.5 bg-surface-container hover:bg-surface-container-high text-on-surface border border-outline-variant/40 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5">
+                  <button type="button" id="btn-test-telegram-send" class="px-4 py-2.5 bg-surface-container hover:bg-surface-container-high text-on-surface border border-outline-variant/40 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5">
                     <span class="material-symbols-outlined text-primary text-[18px]">notifications_active</span>
                     <span>테스트 전송</span>
                   </button>
-                </div>
+                </form>
                 <p class="text-xs text-on-surface-variant/70">
-                  ※ 설정을 저장하시면 내담자가 홈페이지에서 상담 예약을 신청할 때마다 위 ID로 예약자 정보가 실시간 전송됩니다.
+                  ※ 등록된 모든 담당자에게 신규 상담 예약 및 설문지 완료 알림이 실시간 동시 발송됩니다.
                 </p>
+              </div>
+
+              <!-- 텔레그램 수신자 목록 테이블 -->
+              <div class="space-y-sm pt-2">
+                <div class="flex items-center justify-between">
+                  <h3 class="font-bold text-sm text-on-surface flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-primary text-[18px]">format_list_bulleted</span>
+                    <span>알림 수신자 목록</span>
+                  </h3>
+                  <span id="telegram-receiver-count" class="text-xs text-on-surface-variant font-medium">총 0명</span>
+                </div>
+                <div class="bg-surface-container-low/50 rounded-xl border border-outline-variant/20 overflow-hidden">
+                  <table class="w-full text-left border-collapse">
+                    <thead>
+                      <tr class="border-b border-outline-variant/20 bg-surface-container-low text-on-surface-variant text-xs font-semibold">
+                        <th class="py-2.5 px-4">담당자 이름</th>
+                        <th class="py-2.5 px-4 font-mono">Chat ID</th>
+                        <th class="py-2.5 px-4">등록일</th>
+                        <th class="py-2.5 px-4 text-center">수신 상태</th>
+                        <th class="py-2.5 px-4 text-right">관리</th>
+                      </tr>
+                    </thead>
+                    <tbody id="telegram-receiver-list-tbody" class="divide-y divide-outline-variant/10 text-xs">
+                      <!-- 동적 렌더링 -->
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               <!-- 안내 가이드 박스 -->
@@ -974,28 +999,13 @@
                   텔레그램 알림 수신 설정 가이드
                 </h3>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div class="bg-white p-md rounded-lg border border-outline-variant/20 space-y-1.5">
-                    <div class="font-bold text-on-surface text-xs flex items-center gap-1">
-                      <span>👤</span> 1. 담당자 개인 계정으로 받을 때
-                    </div>
-                    <ol class="list-decimal list-inside space-y-1 text-on-surface-variant/80 pl-1">
-                      <li>텔레그램에서 <b class="text-primary font-mono">@metasoma_bot</b> 검색</li>
-                      <li>하단의 <b>[시작]</b> (<code class="bg-gray-100 px-1 rounded">/start</code>) 클릭</li>
-                      <li>본인의 Chat ID를 입력하고 <b>[저장]</b> 클릭</li>
-                    </ol>
-                  </div>
-
-                  <div class="bg-white p-md rounded-lg border border-outline-variant/20 space-y-1.5">
-                    <div class="font-bold text-on-surface text-xs flex items-center gap-1">
-                      <span>👥</span> 2. 상담사 단체방(그룹방)으로 받을 때
-                    </div>
-                    <ol class="list-decimal list-inside space-y-1 text-on-surface-variant/80 pl-1">
-                      <li>상담사 선생님들이 모인 텔레그램 그룹방 생성</li>
-                      <li>그룹방 멤버로 <b class="text-primary font-mono">@metasoma_bot</b> 초대</li>
-                      <li>그룹방의 Group ID(예: <code class="bg-gray-100 px-1 rounded">-100...</code>) 입력 후 <b>[저장]</b></li>
-                    </ol>
-                  </div>
+                <div class="bg-white p-md rounded-lg border border-outline-variant/20 space-y-2">
+                  <ol class="list-decimal list-inside space-y-1.5 text-on-surface-variant pl-1 leading-relaxed">
+                    <li>텔레그램에서 <b class="text-primary font-mono">@metasoma_reservation</b> 검색 후 채팅 시작</li>
+                    <li>채팅창에 <code class="bg-gray-100 text-primary font-semibold px-1.5 py-0.5 rounded">/start</code> 입력</li>
+                    <li>텔레그램에서 <b class="text-primary font-mono">@userinfo</b> 검색 후 채팅 시작</li>
+                    <li>userinfo에 나온 본인의 ID(10자리 숫자)를 위에 입력하고 <b>[수신자 추가]</b> 클릭</li>
+                  </ol>
                 </div>
               </div>
             </div>
@@ -1660,7 +1670,7 @@
 
   <!-- 설정 파일 로드 후 메인 앱 로드 (모듈 해제하여 로컬 더블클릭 실행 지원) -->
   <script src="firebase-config.js"></script>
-  <script src="app.js?v=27"></script>
+  <script src="app.js?v=28"></script>
 
   <!-- 서랍장 열고 닫는 전역 스크립트 바인딩 -->
   <script>

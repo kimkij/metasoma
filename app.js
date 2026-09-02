@@ -2837,29 +2837,14 @@ function registerEventListeners() {
   }
 
   // 텔레그램 알림 수신 설정 버튼 이벤트
-  const btnSaveTg = document.getElementById("btn-save-telegram-chat-id");
-  if (btnSaveTg) {
-    btnSaveTg.addEventListener("click", saveTelegramSettingsUI);
-  }
-
-  const btnDeleteTg = document.getElementById("btn-delete-telegram-chat-id");
-  if (btnDeleteTg) {
-    btnDeleteTg.addEventListener("click", deleteTelegramSettingsUI);
+  const formAddTg = document.getElementById("form-add-telegram-receiver");
+  if (formAddTg) {
+    formAddTg.addEventListener("submit", handleAddTelegramReceiver);
   }
 
   const btnTestTg = document.getElementById("btn-test-telegram-send");
   if (btnTestTg) {
     btnTestTg.addEventListener("click", testTelegramSettingsUI);
-  }
-
-  const inputTg = document.getElementById("setting-telegram-chat-id");
-  if (inputTg) {
-    inputTg.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        saveTelegramSettingsUI();
-      }
-    });
   }
 
   // 관리자 실시간 검색
@@ -3252,17 +3237,31 @@ function registerEventListeners() {
 // 10. 상담 예약 달력 및 예약 신청/관리 로직 + 텔레그램 알림 연동
 // ============================================================================
 const TELEGRAM_BOT_TOKEN = "8852696539:AAFfPbSp5-s2oU2HNkqIilNNxS5oCUWW-w0";
-const INITIAL_DEFAULT_TELEGRAM_CHAT_ID = "5318116202, 8938330961"; // 초기 기본 관리자 Chat ID (김일중 대표 & Judy 실장)
+const TELEGRAM_BOT_TOKEN = "8852696539:AAFfPbSp5-s2oU2HNkqIilNNxS5oCUWW-w0";
+const DEFAULT_TELEGRAM_RECEIVERS = [
+  { id: "tg_default_1", name: "김일중 대표", chatId: "5318116202", createdAt: 1788308000000 },
+  { id: "tg_default_2", name: "Judy 실장", chatId: "8938330961", createdAt: 1788327179000 }
+];
 
-// DB 및 로컬 스토리지에서 텔레그램 Chat ID 조회
-async function dbGetTelegramChatId() {
+// DB 및 로컬 스토리지에서 텔레그램 수신자 목록 조회
+async function dbGetTelegramReceivers() {
   if (window.isFirebaseMode) {
     try {
       const doc = await window.db.collection("crm_settings").doc("telegram").get();
       if (doc.exists) {
         const data = doc.data();
-        if (data.chatId !== undefined && data.chatId !== "") {
-          return data.chatId;
+        if (Array.isArray(data.receivers)) {
+          return data.receivers;
+        } else if (data.chatId) {
+          // 마이그레이션: 기존 문자열 형태 chatId를 파싱
+          const ids = data.chatId.split(/[,\s]+/).map(s => s.trim()).filter(Boolean);
+          const migrated = ids.map((cid, idx) => ({
+            id: "tg_migrated_" + idx + "_" + cid,
+            name: cid === "5318116202" ? "김일중 대표" : (cid === "8938330961" ? "Judy 실장" : `수신자 ${idx + 1}`),
+            chatId: cid,
+            createdAt: Date.now()
+          }));
+          return migrated.length > 0 ? migrated : DEFAULT_TELEGRAM_RECEIVERS;
         }
       }
     } catch (e) {
@@ -3270,103 +3269,201 @@ async function dbGetTelegramChatId() {
     }
   }
 
-  const stored = localStorage.getItem("crm_telegram_chat_id");
-  if (stored !== null && stored !== "") return stored;
-  return INITIAL_DEFAULT_TELEGRAM_CHAT_ID;
+  const stored = localStorage.getItem("crm_telegram_receivers");
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  // legacy 로컬스토리지 fallback
+  const legacyStored = localStorage.getItem("crm_telegram_chat_id");
+  if (legacyStored) {
+    const ids = legacyStored.split(/[,\s]+/).map(s => s.trim()).filter(Boolean);
+    const migrated = ids.map((cid, idx) => ({
+      id: "tg_loc_" + idx + "_" + cid,
+      name: cid === "5318116202" ? "김일중 대표" : (cid === "8938330961" ? "Judy 실장" : `수신자 ${idx + 1}`),
+      chatId: cid,
+      createdAt: Date.now()
+    }));
+    if (migrated.length > 0) return migrated;
+  }
+
+  return DEFAULT_TELEGRAM_RECEIVERS;
 }
 
-// 텔레그램 Chat ID 저장 (DB & 로컬 동기화)
-async function dbSaveTelegramChatId(chatId) {
-  const trimmed = (chatId || "").trim();
+// 텔레그램 수신자 목록 저장
+async function dbSaveTelegramReceivers(receivers) {
   if (window.isFirebaseMode) {
     try {
+      const chatIdsStr = receivers.map(r => r.chatId).join(", ");
       await window.db.collection("crm_settings").doc("telegram").set({
-        chatId: trimmed,
+        receivers: receivers,
+        chatId: chatIdsStr,
         updatedAt: Date.now()
       }, { merge: true });
     } catch (e) {
-      console.error("Firebase telegram config save error:", e);
+      console.error("Firebase telegram receivers save error:", e);
     }
   }
-  localStorage.setItem("crm_telegram_chat_id", trimmed);
+  localStorage.setItem("crm_telegram_receivers", JSON.stringify(receivers));
+  localStorage.setItem("crm_telegram_chat_id", receivers.map(r => r.chatId).join(", "));
 }
 
-// 텔레그램 Chat ID 삭제 (DB & 로컬 동기화)
-async function dbDeleteTelegramChatId() {
-  if (window.isFirebaseMode) {
-    try {
-      await window.db.collection("crm_settings").doc("telegram").set({
-        chatId: "",
-        updatedAt: Date.now()
-      }, { merge: true });
-    } catch (e) {
-      console.error("Firebase telegram config delete error:", e);
-    }
+// 텔레그램 수신자 추가
+async function dbAddTelegramReceiver(name, chatId) {
+  const receivers = await dbGetTelegramReceivers();
+  const trimmedName = (name || "").trim();
+  const trimmedChatId = (chatId || "").trim();
+
+  // 중복 체크
+  if (receivers.some(r => r.chatId === trimmedChatId)) {
+    throw new Error("이미 등록된 Chat ID입니다.");
   }
-  localStorage.setItem("crm_telegram_chat_id", "");
+
+  const newReceiver = {
+    id: "tg_" + Date.now(),
+    name: trimmedName,
+    chatId: trimmedChatId,
+    createdAt: Date.now()
+  };
+
+  receivers.push(newReceiver);
+  await dbSaveTelegramReceivers(receivers);
+  return newReceiver;
 }
 
-// 텔레그램 설정 UI 초기화 및 상태 반영
+// 텔레그램 수신자 삭제
+async function dbDeleteTelegramReceiver(receiverId) {
+  let receivers = await dbGetTelegramReceivers();
+  receivers = receivers.filter(r => r.id !== receiverId && r.chatId !== receiverId);
+  await dbSaveTelegramReceivers(receivers);
+}
+
+// 텔레그램 설정 UI 렌더링
 async function initTelegramSettingsUI() {
-  const inputEl = document.getElementById("setting-telegram-chat-id");
   const badgeEl = document.getElementById("telegram-status-badge");
-  if (!inputEl) return;
+  const tbodyEl = document.getElementById("telegram-receiver-list-tbody");
+  const countEl = document.getElementById("telegram-receiver-count");
+  if (!tbodyEl) return;
 
-  const currentChatId = await dbGetTelegramChatId();
-  inputEl.value = currentChatId || "";
+  const receivers = await dbGetTelegramReceivers();
 
   if (badgeEl) {
-    if (currentChatId) {
-      const count = currentChatId.split(/[,\s]+/).filter(Boolean).length;
-      badgeEl.textContent = count > 1 ? `연동 활성 (${count}명 수신)` : "연동 활성";
-      badgeEl.className = "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200";
+    if (receivers.length > 0) {
+      badgeEl.textContent = `연동 활성 (${receivers.length}명 수신)`;
+      badgeEl.className = "px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200";
     } else {
       badgeEl.textContent = "미연동 (알림 꺼짐)";
-      badgeEl.className = "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-500 border border-gray-200";
+      badgeEl.className = "px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-500 border border-gray-200";
     }
   }
-}
 
-// 텔레그램 설정 저장 핸들러
-async function saveTelegramSettingsUI() {
-  const inputEl = document.getElementById("setting-telegram-chat-id");
-  if (!inputEl) return;
+  if (countEl) {
+    countEl.textContent = `총 ${receivers.length}명`;
+  }
 
-  const val = inputEl.value.trim();
-  if (!val) {
-    showToast("저장할 텔레그램 Chat ID를 입력해주세요. (삭제를 원하시면 삭제 버튼을 눌러주세요)", "warning");
+  tbodyEl.innerHTML = "";
+
+  if (receivers.length === 0) {
+    tbodyEl.innerHTML = `
+      <tr>
+        <td colspan="5" class="py-6 px-4 text-center text-on-surface-variant/50">
+          등록된 텔레그램 수신자가 없습니다. 위 입력창에서 담당자 이름과 Chat ID를 등록해주세요.
+        </td>
+      </tr>
+    `;
     return;
   }
 
-  await dbSaveTelegramChatId(val);
-  await initTelegramSettingsUI();
-  showToast("텔레그램 수신 Chat ID가 성공적으로 저장되었습니다.", "success");
+  receivers.forEach(rec => {
+    const tr = document.createElement("tr");
+    tr.className = "hover:bg-surface-container-low/50 transition-colors border-b border-surface-container-low";
+
+    const dateStr = new Date(rec.createdAt || Date.now()).toLocaleDateString("ko-KR", {
+      year: "numeric", month: "2-digit", day: "2-digit"
+    });
+
+    tr.innerHTML = `
+      <td class="py-3 px-4 font-semibold text-on-surface">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+            ${(rec.name || "관").slice(0, 1)}
+          </div>
+          <span>${rec.name || "미지정"}</span>
+        </div>
+      </td>
+      <td class="py-3 px-4 font-mono text-on-surface-variant font-medium">${rec.chatId}</td>
+      <td class="py-3 px-4 text-on-surface-variant/70">${dateStr}</td>
+      <td class="py-3 px-4 text-center">
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 수신 활성
+        </span>
+      </td>
+      <td class="py-3 px-4 text-right">
+        <button class="btn-delete-tg-receiver px-2.5 py-1 text-red-600 hover:bg-red-50 border border-red-200 rounded-lg text-xs font-medium transition-colors inline-flex items-center gap-1 cursor-pointer" data-id="${rec.id}">
+          <span class="material-symbols-outlined text-[14px]">delete</span>
+          <span>삭제</span>
+        </button>
+      </td>
+    `;
+
+    tr.querySelector(".btn-delete-tg-receiver").addEventListener("click", async () => {
+      if (confirm(`'${rec.name}(${rec.chatId})' 담당자를 텔레그램 알림 수신자 목록에서 삭제하시겠습니까?`)) {
+        await dbDeleteTelegramReceiver(rec.id);
+        showToast("수신자가 삭제되었습니다.");
+        await initTelegramSettingsUI();
+      }
+    });
+
+    tbodyEl.appendChild(tr);
+  });
 }
 
-// 텔레그램 설정 삭제 핸들러
-async function deleteTelegramSettingsUI() {
-  const isConfirmed = confirm(
-    "텔레그램 알림 수신 설정을 삭제하시겠습니까?\n\n" +
-    "※ 삭제 시 새로운 상담 예약이 들어와도 텔레그램 알림이 발송되지 않습니다."
-  );
-  if (!isConfirmed) return;
+// 텔레그램 수신자 추가 폼 제출 핸들러
+async function handleAddTelegramReceiver(e) {
+  if (e) e.preventDefault();
+  const nameInput = document.getElementById("setting-telegram-name");
+  const idInput = document.getElementById("setting-telegram-chat-id");
+  if (!nameInput || !idInput) return;
 
-  await dbDeleteTelegramChatId();
-  await initTelegramSettingsUI();
-  showToast("텔레그램 알림 연동이 삭제되었습니다.", "info");
+  const name = nameInput.value.trim();
+  const chatId = idInput.value.trim();
+
+  if (!name) {
+    showToast("담당자 이름을 입력해주세요.", "warning");
+    nameInput.focus();
+    return;
+  }
+  if (!chatId) {
+    showToast("텔레그램 Chat ID를 입력해주세요.", "warning");
+    idInput.focus();
+    return;
+  }
+
+  try {
+    await dbAddTelegramReceiver(name, chatId);
+    nameInput.value = "";
+    idInput.value = "";
+    await initTelegramSettingsUI();
+    showToast(`'${name}' 수신자가 성공적으로 등록되었습니다.`, "success");
+  } catch (err) {
+    showToast(err.message || "수신자 등록 중 오류가 발생했습니다.", "error");
+  }
 }
 
 // 텔레그램 설정 테스트 전송 핸들러
 async function testTelegramSettingsUI() {
-  const inputEl = document.getElementById("setting-telegram-chat-id");
-  const targetChatId = inputEl ? inputEl.value.trim() : "";
-
-  if (!targetChatId) {
-    showToast("먼저 Chat ID를 입력하거나 저장한 후 테스트를 진행해주세요.", "warning");
+  const receivers = await dbGetTelegramReceivers();
+  if (receivers.length === 0) {
+    showToast("등록된 수신자가 없습니다. 먼저 수신자를 등록해주세요.", "warning");
     return;
   }
 
-  showToast("텔레그램으로 테스트 메시지를 발송하는 중...", "info");
+  showToast(`등록된 ${receivers.length}명의 수신자에게 테스트 메시지를 발송 중...`, "info");
 
   const testData = {
     name: "홍길동 (테스트 신청자)",
@@ -3376,29 +3473,29 @@ async function testTelegramSettingsUI() {
     time: "14:00"
   };
 
-  const success = await sendTelegramReservationNotification(testData, targetChatId);
+  const success = await sendTelegramReservationNotification(testData);
   if (success) {
     showToast("텔레그램 봇으로 테스트 알림이 성공적으로 전송되었습니다!", "success");
   } else {
-    showToast("발송 실패: 봇(@metasoma_bot)에서 /start를 누르셨는지 또는 Chat ID를 확인해주세요.", "error");
+    showToast("발송 실패: 봇(@metasoma_reservation)에서 /start를 누르셨는지 확인해주세요.", "error");
   }
 }
 
-// 텔레그램 봇으로 예약 정보 전송 (단일 또는 쉼표 구분 다중 Chat ID 지원)
+// 텔레그램 봇으로 예약 정보 전송
 async function sendTelegramReservationNotification(reservation, customChatId = null) {
   try {
-    const rawChatId = customChatId || await dbGetTelegramChatId();
-    if (!rawChatId) {
-      console.warn("ℹ️ 텔레그램 Chat ID가 설정되지 않아 알림 발송을 건너뜁니다.");
-      return false;
+    let chatIds = [];
+    if (customChatId) {
+      chatIds = customChatId.split(/[,\s\n]+/).map(s => s.trim()).filter(Boolean);
+    } else {
+      const receivers = await dbGetTelegramReceivers();
+      chatIds = receivers.map(r => r.chatId).filter(Boolean);
     }
 
-    const chatIds = rawChatId
-      .split(/[,\s\n]+/)
-      .map(s => s.trim())
-      .filter(Boolean);
-
-    if (chatIds.length === 0) return false;
+    if (chatIds.length === 0) {
+      console.warn("ℹ️ 등록된 텔레그램 수신자가 없어 알림 발송을 건너뜁니다.");
+      return false;
+    }
 
     const birthFormatted = (reservation.birthDate || "").length === 8
       ? `${reservation.birthDate.slice(0, 4)}-${reservation.birthDate.slice(4, 6)}-${reservation.birthDate.slice(6, 8)}`
@@ -3410,7 +3507,7 @@ async function sendTelegramReservationNotification(reservation, customChatId = n
     });
 
     const messageText = 
-      `🔔 <b>[메타소마 미술치료 연구소] 신규 상담 예약 신청</b>\n\n` +
+      `🔔 <b>[메타소마 미술치료] 신규 상담 예약 신청</b>\n\n` +
       `👤 <b>예약자명:</b> ${reservation.name}\n` +
       `🎂 <b>생년월일:</b> ${birthFormatted}\n` +
       `📞 <b>연락처:</b> ${reservation.phone}\n` +
@@ -3453,18 +3550,13 @@ async function sendTelegramReservationNotification(reservation, customChatId = n
 // 텔레그램 봇으로 상담지 작성 완료 알림 전송
 async function sendTelegramQuestionnaireNotification(data) {
   try {
-    const rawChatId = await dbGetTelegramChatId();
-    if (!rawChatId) {
-      console.warn("ℹ️ 텔레그램 Chat ID가 설정되지 않아 상담지 완료 알림 발송을 건너뜁니다.");
+    const receivers = await dbGetTelegramReceivers();
+    const chatIds = receivers.map(r => r.chatId).filter(Boolean);
+
+    if (chatIds.length === 0) {
+      console.warn("ℹ️ 등록된 텔레그램 수신자가 없어 상담지 완료 알림 발송을 건너뜁니다.");
       return false;
     }
-
-    const chatIds = rawChatId
-      .split(/[,\s\n]+/)
-      .map(s => s.trim())
-      .filter(Boolean);
-
-    if (chatIds.length === 0) return false;
 
     const birthFormatted = (data.birthDate || "").length === 8
       ? `${data.birthDate.slice(0, 4)}-${data.birthDate.slice(4, 6)}-${data.birthDate.slice(6, 8)}`

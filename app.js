@@ -3187,19 +3187,25 @@ function registerEventListeners() {
   if (DOM.calPrevBtn) {
     DOM.calPrevBtn.addEventListener("click", () => {
       const months = getAvailableMonthRange();
-      calCurrentYear = months[0].year;
-      calCurrentMonth = months[0].month;
-      calSelectedDate = null;
-      renderReservationCalendar();
+      const currIdx = months.findIndex(m => m.year === calCurrentYear && m.month === calCurrentMonth);
+      if (currIdx > 0) {
+        calCurrentYear = months[currIdx - 1].year;
+        calCurrentMonth = months[currIdx - 1].month;
+        calSelectedDate = null;
+        renderReservationCalendar();
+      }
     });
   }
   if (DOM.calNextBtn) {
     DOM.calNextBtn.addEventListener("click", () => {
       const months = getAvailableMonthRange();
-      calCurrentYear = months[1].year;
-      calCurrentMonth = months[1].month;
-      calSelectedDate = null;
-      renderReservationCalendar();
+      const currIdx = months.findIndex(m => m.year === calCurrentYear && m.month === calCurrentMonth);
+      if (currIdx >= 0 && currIdx < months.length - 1) {
+        calCurrentYear = months[currIdx + 1].year;
+        calCurrentMonth = months[currIdx + 1].month;
+        calSelectedDate = null;
+        renderReservationCalendar();
+      }
     });
   }
 
@@ -3399,18 +3405,21 @@ async function sendTelegramReservationNotification(reservation, customChatId = n
   }
 }
 
-let calCurrentYear = 2026;
-let calCurrentMonth = 9; // 0-indexed: 9 = 10월
-let calSelectedDate = "2026-10-06"; // 초기 선택 날짜
+const _initCalendarNow = new Date();
+let calCurrentYear = _initCalendarNow.getFullYear();
+let calCurrentMonth = _initCalendarNow.getMonth(); // 0-indexed: 당월 (오늘 기준)
+let calSelectedDate = null; // renderReservationCalendar에서 오늘 이후 첫 운영일로 자동 초기화
 let calSelectedTime = null;
 let resCurrentStatusFilter = "all";
 
-// 향후 2개월 (익월, 익익월) 정보 반환
+// 당월부터 두 달 뒤까지 (총 3개 월: 당월, 익월, 익익월) 정보 반환
 function getAvailableMonthRange() {
   const now = new Date();
+  const m0 = new Date(now.getFullYear(), now.getMonth(), 1);
   const m1 = new Date(now.getFullYear(), now.getMonth() + 1, 1);
   const m2 = new Date(now.getFullYear(), now.getMonth() + 2, 1);
   return [
+    { year: m0.getFullYear(), month: m0.getMonth() },
     { year: m1.getFullYear(), month: m1.getMonth() },
     { year: m2.getFullYear(), month: m2.getMonth() }
   ];
@@ -3448,21 +3457,20 @@ function getOperatingTimeSlots(dayOfWeek) {
 async function renderReservationCalendar() {
   if (!DOM.calDaysGrid) return;
   const months = getAvailableMonthRange();
-  const m1 = months[0];
-  const m2 = months[1];
+  const minMonth = months[0];
+  const maxMonth = months[months.length - 1];
 
-  // 현재 표시 월이 범위 밖이면 m1으로 초기화
-  if ((calCurrentYear === m1.year && calCurrentMonth === m1.month) || (calCurrentYear === m2.year && calCurrentMonth === m2.month)) {
-    // 정상 범위
-  } else {
-    calCurrentYear = m1.year;
-    calCurrentMonth = m1.month;
+  // 현재 표시 월이 범위 내에 있는지 확인
+  const isCurrentInMonths = months.some(m => m.year === calCurrentYear && m.month === calCurrentMonth);
+  if (!isCurrentInMonths) {
+    calCurrentYear = minMonth.year;
+    calCurrentMonth = minMonth.month;
   }
 
   // 상단 월 라벨 및 이전/다음 버튼 활성/비활성화
   if (DOM.calMonthTitle) DOM.calMonthTitle.textContent = `${calCurrentYear}년 ${calCurrentMonth + 1}월`;
-  if (DOM.calPrevBtn) DOM.calPrevBtn.disabled = (calCurrentYear === m1.year && calCurrentMonth === m1.month);
-  if (DOM.calNextBtn) DOM.calNextBtn.disabled = (calCurrentYear === m2.year && calCurrentMonth === m2.month);
+  if (DOM.calPrevBtn) DOM.calPrevBtn.disabled = (calCurrentYear === minMonth.year && calCurrentMonth === minMonth.month);
+  if (DOM.calNextBtn) DOM.calNextBtn.disabled = (calCurrentYear === maxMonth.year && calCurrentMonth === maxMonth.month);
 
   const daysInMonth = new Date(calCurrentYear, calCurrentMonth + 1, 0).getDate();
   const firstDayOfWeek = new Date(calCurrentYear, calCurrentMonth, 1).getDay();
@@ -3476,6 +3484,9 @@ async function renderReservationCalendar() {
     DOM.calDaysGrid.appendChild(emptyCell);
   }
 
+  const todayObj = new Date();
+  const todayStr = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, "0")}-${String(todayObj.getDate()).padStart(2, "0")}`;
+
   let foundFirstOperatingDate = null;
 
   for (let day = 1; day <= daysInMonth; day++) {
@@ -3483,9 +3494,15 @@ async function renderReservationCalendar() {
     const dayOfWeek = dateObj.getDay();
     const dateStr = `${calCurrentYear}-${String(calCurrentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     const isMonday = (dayOfWeek === 1);
+    const isPastDate = (dateStr < todayStr); // 오늘 이전 지난 날짜
 
+    // 기본 선택 후보: 당월인 경우 오늘 이후 첫 운영일, 미래 월인 경우 1일 이후 첫 운영일
     if (!isMonday && !foundFirstOperatingDate) {
-      foundFirstOperatingDate = dateStr;
+      if (calCurrentYear === todayObj.getFullYear() && calCurrentMonth === todayObj.getMonth()) {
+        if (!isPastDate) foundFirstOperatingDate = dateStr;
+      } else {
+        foundFirstOperatingDate = dateStr;
+      }
     }
 
     const cell = document.createElement("button");
@@ -3499,8 +3516,16 @@ async function renderReservationCalendar() {
         <span class="text-xs font-semibold">${day}</span>
         <span class="text-[9px] text-gray-400 font-normal">휴무</span>
       `;
+    } else if (isPastDate) {
+      // 지난 날짜: 예약 마감/지난 일정 (회색 처리 및 선택 비활성화)
+      cell.className = "p-1 rounded-xl text-center bg-gray-50/80 border border-transparent text-gray-300 cursor-not-allowed select-none flex flex-col items-center justify-center min-h-[44px]";
+      cell.disabled = true;
+      cell.innerHTML = `
+        <span class="text-xs font-semibold text-gray-300">${day}</span>
+        <span class="text-[9px] text-gray-300 font-normal">마감</span>
+      `;
     } else {
-      // 운영 요일
+      // 예약 가능한 운영 요일
       const isSelected = (calSelectedDate === dateStr);
       let textColor = "text-on-surface";
       if (dayOfWeek === 0) textColor = "text-red-500";
@@ -3527,9 +3552,10 @@ async function renderReservationCalendar() {
     DOM.calDaysGrid.appendChild(cell);
   }
 
-  // 선택된 날짜가 현재 월에 속하지 않거나 없으면 첫 운영일로 기본 선택
-  if (!calSelectedDate || !calSelectedDate.startsWith(`${calCurrentYear}-${String(calCurrentMonth + 1).padStart(2, "0")}`)) {
-    calSelectedDate = foundFirstOperatingDate || `${calCurrentYear}-${String(calCurrentMonth + 1).padStart(2, "0")}-01`;
+  // 선택된 날짜가 현재 표시 월에 속하지 않거나, 지난 날짜이면 첫 유효 운영일로 자동 선택
+  const currentMonthPrefix = `${calCurrentYear}-${String(calCurrentMonth + 1).padStart(2, "0")}`;
+  if (!calSelectedDate || !calSelectedDate.startsWith(currentMonthPrefix) || (calSelectedDate < todayStr)) {
+    calSelectedDate = foundFirstOperatingDate || `${currentMonthPrefix}-01`;
   }
 
   const selectedDateParts = calSelectedDate.split("-");
@@ -3698,8 +3724,9 @@ async function handleConfirmReservation(e) {
 // 기간 검색 커스텀 2회 클릭 달력 모달 (시작일 -> 종료일)
 // ============================================================================
 let drTarget = "clients"; // "clients" or "reservations"
-let drViewYear = 2026;
-let drViewMonth = 9; // 0-indexed (9 = 10월)
+const _initDrNow = new Date();
+let drViewYear = _initDrNow.getFullYear();
+let drViewMonth = _initDrNow.getMonth(); // 0-indexed (당월)
 let drSelectedStart = null; // "YYYY-MM-DD"
 let drSelectedEnd = null;   // "YYYY-MM-DD"
 let drHoverDate = null;     // 마우스 호버 일자 (미리보기)
@@ -3727,14 +3754,15 @@ function openDateRangeModal(target) {
     drSelectedEnd = resDateRange.end;
   }
 
-  // 시작일이 이미 있으면 그 달로, 없으면 2026년 10월로 기본 설정
+  // 시작일이 이미 있으면 그 달로, 없으면 당월(현재 월)로 기본 설정
   if (drSelectedStart) {
     const parts = drSelectedStart.split("-");
     drViewYear = parseInt(parts[0], 10);
     drViewMonth = parseInt(parts[1], 10) - 1;
   } else {
-    drViewYear = 2026;
-    drViewMonth = 9; // 10월
+    const now = new Date();
+    drViewYear = now.getFullYear();
+    drViewMonth = now.getMonth();
   }
 
   drStep = 1;

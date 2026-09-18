@@ -2996,6 +2996,39 @@ function registerEventListeners() {
     btnTestTg.addEventListener("click", testTelegramSettingsUI);
   }
 
+  // 텔레그램 봇 토큰 저장 폼 이벤트
+  const formSaveTgToken = document.getElementById("form-save-telegram-token");
+  if (formSaveTgToken) {
+    formSaveTgToken.addEventListener("submit", async (e) => {
+      if (e) e.preventDefault();
+      const tokenInput = document.getElementById("setting-telegram-token");
+      if (!tokenInput) return;
+      const tokenVal = tokenInput.value.trim();
+      if (!tokenVal) {
+        showToast("토큰 값을 입력해주세요.", "warning");
+        return;
+      }
+      await dbSaveTelegramBotToken(tokenVal);
+      showToast("텔레그램 봇 토큰이 안전하게 저장되었습니다.", "success");
+      await initTelegramSettingsUI();
+    });
+  }
+
+  const btnToggleTokenVis = document.getElementById("btn-toggle-telegram-token-vis");
+  if (btnToggleTokenVis) {
+    btnToggleTokenVis.addEventListener("click", () => {
+      const tokenInput = document.getElementById("setting-telegram-token");
+      if (!tokenInput) return;
+      if (tokenInput.type === "password") {
+        tokenInput.type = "text";
+        btnToggleTokenVis.textContent = "숨기기";
+      } else {
+        tokenInput.type = "password";
+        btnToggleTokenVis.textContent = "보기";
+      }
+    });
+  }
+
   // 관리자 실시간 검색
   if (DOM.searchAdmin) {
     DOM.searchAdmin.addEventListener("input", renderAdminDirectory);
@@ -3385,7 +3418,51 @@ function registerEventListeners() {
 // ============================================================================
 // 10. 상담 예약 달력 및 예약 신청/관리 로직 + 텔레그램 알림 연동
 // ============================================================================
-const TELEGRAM_BOT_TOKEN = "8852696539:AAFfPbSp5-s2oU2HNkqIilNNxS5oCUWW-w0";
+// 텔레그램 봇 토큰: Firebase DB(crm_settings/telegram) 및 localStorage에만 보관 (GitHub 코드 노출 방지)
+let cachedTelegramBotToken = "";
+
+async function dbGetTelegramBotToken() {
+  if (cachedTelegramBotToken) return cachedTelegramBotToken;
+
+  if (window.isFirebaseMode) {
+    try {
+      const doc = await window.db.collection("crm_settings").doc("telegram").get();
+      if (doc.exists && doc.data().botToken) {
+        cachedTelegramBotToken = doc.data().botToken;
+        localStorage.setItem("crm_telegram_bot_token", cachedTelegramBotToken);
+        return cachedTelegramBotToken;
+      }
+    } catch (e) {
+      console.warn("Firebase telegram botToken fetch warning:", e);
+    }
+  }
+
+  const stored = localStorage.getItem("crm_telegram_bot_token");
+  if (stored) {
+    cachedTelegramBotToken = stored;
+    return cachedTelegramBotToken;
+  }
+
+  return "";
+}
+
+async function dbSaveTelegramBotToken(token) {
+  const trimmed = (token || "").trim();
+  cachedTelegramBotToken = trimmed;
+  localStorage.setItem("crm_telegram_bot_token", trimmed);
+
+  if (window.isFirebaseMode) {
+    try {
+      await window.db.collection("crm_settings").doc("telegram").set({
+        botToken: trimmed,
+        tokenUpdatedAt: Date.now()
+      }, { merge: true });
+    } catch (e) {
+      console.error("Firebase telegram botToken save error:", e);
+    }
+  }
+}
+
 const DEFAULT_TELEGRAM_RECEIVERS = [
   { id: "tg_default_1", name: "김일중 대표", chatId: "5318116202", createdAt: 1788308000000 },
   { id: "tg_default_2", name: "Judy 실장", chatId: "8938330961", createdAt: 1788327179000 }
@@ -3398,6 +3475,10 @@ async function dbGetTelegramReceivers() {
       const doc = await window.db.collection("crm_settings").doc("telegram").get();
       if (doc.exists) {
         const data = doc.data();
+        if (data.botToken && !cachedTelegramBotToken) {
+          cachedTelegramBotToken = data.botToken;
+          localStorage.setItem("crm_telegram_bot_token", cachedTelegramBotToken);
+        }
         if (Array.isArray(data.receivers)) {
           return data.receivers;
         } else if (data.chatId) {
@@ -3499,6 +3580,12 @@ async function initTelegramSettingsUI() {
   if (!tbodyEl) return;
 
   const receivers = await dbGetTelegramReceivers();
+  const currentToken = await dbGetTelegramBotToken();
+
+  const tokenInput = document.getElementById("setting-telegram-token");
+  if (tokenInput && currentToken) {
+    tokenInput.value = currentToken;
+  }
 
   if (badgeEl) {
     if (receivers.length > 0) {
@@ -3664,10 +3751,15 @@ async function sendTelegramReservationNotification(reservation, customChatId = n
       `<i>※ 확인 전화 후 관리자 페이지에서 예약을 확정해주세요.</i>`;
 
     let anySuccess = false;
+    const botToken = await dbGetTelegramBotToken();
+    if (!botToken) {
+      console.warn("ℹ️ 텔레그램 봇 토큰이 등록되어 있지 않습니다. 관리자 페이지 텔레그램 설정에서 토큰을 입력해주세요.");
+      return false;
+    }
 
     for (const cid of chatIds) {
       try {
-        const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -3706,6 +3798,12 @@ async function sendTelegramQuestionnaireNotification(data) {
       return false;
     }
 
+    const botToken = await dbGetTelegramBotToken();
+    if (!botToken) {
+      console.warn("ℹ️ 텔레그램 봇 토큰이 등록되어 있지 않습니다. 관리자 페이지 텔레그램 설정에서 토큰을 입력해주세요.");
+      return false;
+    }
+
     const birthFormatted = (data.birthDate || "").length === 8
       ? `${data.birthDate.slice(0, 4)}-${data.birthDate.slice(4, 6)}-${data.birthDate.slice(6, 8)}`
       : (data.birthDate || "-");
@@ -3728,7 +3826,7 @@ async function sendTelegramQuestionnaireNotification(data) {
 
     for (const cid of chatIds) {
       try {
-        const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
